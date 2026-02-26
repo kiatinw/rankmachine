@@ -7,25 +7,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap');
-
-:root {
-  --ink: #1a1814; --paper: #f5f0e8; --cream: #ede7d6;
-  --accent: #c84b2f; --muted: #8a8278; --border: rgba(26,24,20,0.15);
-  --gt-bg: #f0e8f8; --gt-border: #c0a0d8;
-  --top30-bg: #fdf2cc; --top30-border: #e8c840;
-}
+:root{--ink:#1a1814;--paper:#f5f0e8;--cream:#ede7d6;--accent:#c84b2f;--muted:#8a8278;--border:rgba(26,24,20,0.15);--gt-bg:#f0e8f8;--gt-border:#c0a0d8;--top30-bg:#fdf2cc;--top30-border:#e8c840}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Mono',monospace;background:var(--paper);color:var(--ink);min-height:100vh;padding:2rem}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.5;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")}
 
-/* Masthead */
 .masthead{border-bottom:2px solid var(--ink);padding-bottom:1rem;margin-bottom:2rem}
-.masthead h1{font-family:'DM Serif Display',serif;font-size:clamp(3rem,7vw,6rem);line-height:1;letter-spacing:-.02em}
+.masthead h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,5vw,3.5rem);line-height:1;letter-spacing:-.02em}
 .masthead h1 em{font-style:italic;color:var(--accent)}
-.masthead .tagline{font-size:1rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
+.masthead .tagline{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
 
-/* Panels */
 .panel{background:var(--cream);border:1px solid var(--border);border-radius:4px;margin-bottom:1.5rem;overflow:hidden}
 .panel-header{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;cursor:pointer;user-select:none}
 .panel-header h3{font-family:'DM Serif Display',serif;font-size:1.1rem;flex:1}
@@ -36,7 +27,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .step{display:flex;gap:.75rem;margin-bottom:.3rem;align-items:baseline;font-size:.75rem;line-height:1.7}
 .step-num{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--accent);flex-shrink:0;width:1rem}
 
-/* Settings */
 .settings{background:var(--cream);border:1px solid var(--border);border-radius:4px;padding:1.25rem 1.5rem;margin-bottom:1.5rem}
 .settings-grid{display:grid;grid-template-columns:auto 1fr;gap:.9rem 1.5rem;align-items:start}
 .setting-label-group{display:flex;flex-direction:column;gap:.2rem;padding-top:.45rem}
@@ -46,21 +36,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .settings input[type=text],.settings select{font-family:'DM Mono',monospace;font-size:.8rem;background:var(--paper);border:1px solid var(--border);border-radius:2px;padding:.4rem .6rem;color:var(--ink);width:100%;max-width:380px}
 .settings input[type=text]:focus,.settings select:focus{outline:none;border-color:var(--accent)}
 
-/* ── Penalty panel ── */
-.penalty-section-label{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:.4rem;margin:1.2rem 0 .6rem;font-weight:500}
+/* Penalty panel */
+.penalty-section-label{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:.4rem;margin:1.2rem 0 .6rem;font-weight:500;display:flex;align-items:center;gap:.75rem}
+.penalty-section-label .apply-all-btn{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;padding:.18rem .55rem;background:var(--paper);border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--muted);transition:all .15s;margin-left:auto}
+.penalty-section-label .apply-all-btn:hover{border-color:var(--gt-border);color:#5a2a8a;background:var(--gt-bg)}
 .penalty-controls{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
 .penalty-mode-label{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .seg-control{display:flex;border:1px solid var(--border);border-radius:3px;overflow:hidden}
 .seg-control button{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;padding:.3rem .8rem;background:var(--paper);border:none;cursor:pointer;color:var(--muted);transition:background .15s,color .15s}
 .seg-control button.active{background:var(--ink);color:var(--paper)}
 .seg-control button:not(:last-child){border-right:1px solid var(--border)}
-.category-legend{display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;font-size:.68rem}
+.category-legend{display:flex;gap:.75rem;flex-wrap:wrap;font-size:.68rem}
 .cat-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:2px;border:1px solid var(--border);cursor:default}
 .cat-badge.easy{background:#e8f4e8;border-color:#a8d0a8;color:#2a5a2a}
 .cat-badge.normal{background:var(--cream)}
 .cat-badge.hard{background:#e8eef8;border-color:#a8b8d8;color:#1a2a5a}
-
-.penalty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.5rem}
+.penalty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.5rem;margin-bottom:.5rem}
 .penalty-row{display:flex;align-items:center;gap:.6rem;padding:.4rem .6rem;background:var(--paper);border:1px solid var(--border);border-radius:3px}
 .penalty-subject-name{flex:1;font-size:.72rem;line-height:1.3}
 .gt-badge{font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;padding:.1rem .35rem;border-radius:2px;background:var(--gt-bg);border:1px solid var(--gt-border);color:#5a2a8a;flex-shrink:0}
@@ -71,25 +62,32 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .penalty-apply-btn{margin-top:1rem;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem 1rem;background:var(--ink);color:var(--paper);border:none;border-radius:2px;cursor:pointer;transition:background .15s}
 .penalty-apply-btn:hover{background:var(--accent)}
 
-/* ── Maths grouping ── */
+/* Apply-all modal */
+.apply-all-row{display:flex;align-items:center;gap:.75rem;margin-top:.75rem;padding:.6rem;background:var(--gt-bg);border:1px solid var(--gt-border);border-radius:3px}
+.apply-all-row label{font-size:.7rem;color:#5a2a8a}
+.apply-all-row select,.apply-all-row input[type=number]{font-family:'DM Mono',monospace;font-size:.75rem;background:var(--paper);border:1px solid var(--gt-border);border-radius:2px;padding:.25rem .4rem;color:var(--ink)}
+.apply-all-row button{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .7rem;background:#5a2a8a;color:#fff;border:none;border-radius:2px;cursor:pointer}
+.apply-all-row button:hover{background:#3a1a6a}
+
+/* Maths grouping */
 .maths-group-area{margin-top:.5rem}
 .maths-group-controls{display:flex;gap:.5rem;align-items:center;margin-bottom:.75rem;flex-wrap:wrap}
 .add-group-btn{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .7rem;background:transparent;border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--muted);transition:all .15s}
 .add-group-btn:hover{border-color:var(--ink);color:var(--ink)}
 .maths-groups-container{display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-start}
-.maths-group-col{background:var(--paper);border:1px solid var(--border);border-radius:4px;min-width:180px;max-width:240px;flex:1}
+.maths-group-col{background:var(--paper);border:1px solid var(--border);border-radius:4px;min-width:160px;max-width:220px;flex:1}
 .maths-group-header{display:flex;align-items:center;gap:.4rem;padding:.5rem .6rem;border-bottom:1px solid var(--border);background:var(--cream)}
 .maths-group-name-input{font-family:'DM Serif Display',serif;font-size:.9rem;border:none;background:transparent;color:var(--ink);flex:1;min-width:0;padding:0}
 .maths-group-name-input:focus{outline:none;border-bottom:1px solid var(--accent)}
-.remove-group-btn{font-size:.7rem;background:none;border:none;cursor:pointer;color:var(--muted);padding:.1rem .3rem;line-height:1}
+.remove-group-btn{font-size:.75rem;background:none;border:none;cursor:pointer;color:var(--muted);padding:.1rem .25rem;line-height:1;flex-shrink:0}
 .remove-group-btn:hover{color:var(--accent)}
-.maths-drop-zone{min-height:48px;padding:.4rem;display:flex;flex-direction:column;gap:.3rem}
-.maths-drop-zone.drag-over{background:#f0e8d8;border-radius:2px}
-.maths-class-chip{padding:.25rem .5rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;font-size:.68rem;cursor:grab;user-select:none;display:flex;align-items:center;gap:.3rem}
-.maths-class-chip:active{cursor:grabbing;opacity:.7}
-.maths-class-chip .chip-remove{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.7rem;line-height:1;padding:0 .1rem;margin-left:auto}
-.maths-class-chip .chip-remove:hover{color:var(--accent)}
-.maths-unassigned{background:var(--paper);border:1px solid var(--border);border-radius:4px;min-width:180px;flex:1;max-width:260px}
+.maths-drop-zone{min-height:52px;padding:.4rem;display:flex;flex-direction:column;gap:.3rem;border-radius:0 0 4px 4px;transition:background .15s}
+.maths-drop-zone.dz-over{background:#f0e8d8;outline:2px dashed var(--accent)}
+.maths-class-chip{padding:.25rem .5rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;font-size:.68rem;cursor:grab;user-select:none;display:flex;align-items:center;gap:.3rem;transition:opacity .15s}
+.maths-class-chip.dragging{opacity:.4;cursor:grabbing}
+.maths-class-chip .chip-x{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.65rem;line-height:1;padding:0 .1rem;margin-left:auto;flex-shrink:0}
+.maths-class-chip .chip-x:hover{color:var(--accent)}
+.maths-unassigned{background:var(--paper);border:1px solid var(--border);border-radius:4px;min-width:160px;flex:1;max-width:220px}
 .maths-unassigned-header{padding:.5rem .6rem;border-bottom:1px solid var(--border);background:#fde8e3;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
 
 /* Upload */
@@ -100,7 +98,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .upload-zone h2{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:.4rem}
 .upload-zone p{font-size:.75rem;color:var(--muted);letter-spacing:.05em}
 
-/* Status */
 #status{font-size:.75rem;letter-spacing:.08em;color:var(--muted);margin-bottom:1.5rem;min-height:1.2em;text-transform:uppercase}
 #status.error{color:var(--accent)}
 #status.success{color:#2a7a3b}
@@ -108,11 +105,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .progress-bar.visible{display:block}
 .progress-fill{height:100%;background:var(--accent);width:0%;transition:width .3s}
 
-/* Results */
 .results{display:none}
 .results.visible{display:block}
 
-/* Collapsible table sections */
 .collapsible-section{margin-bottom:1.5rem}
 .collapsible-header{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;background:var(--ink);color:var(--paper);border-radius:4px 4px 0 0;cursor:pointer;user-select:none;margin-top:2rem}
 .collapsible-header.collapsed{border-radius:4px}
@@ -122,7 +117,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .collapsible-body{display:block}
 .collapsible-body.hidden{display:none}
 
-/* Tables */
 .table-wrap{overflow-x:auto;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px}
 table{width:100%;border-collapse:collapse;font-size:.78rem}
 thead tr{background:#2e2b26;color:var(--paper)}
@@ -134,8 +128,8 @@ tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--cream)}
 tbody tr.gold{background:#fdf6e0}
 tbody tr.gold:hover{background:#f9efcd}
-tbody tr.top30{background:var(--top30-bg) !important}
-tbody tr.top30:hover{background:#faedb0 !important}
+tbody tr.top30{background:var(--top30-bg)!important}
+tbody tr.top30:hover{background:#faedb0!important}
 td{padding:.55rem .9rem;vertical-align:middle}
 td.name{font-family:'DM Serif Display',serif;font-size:.95rem;white-space:nowrap}
 td.center{text-align:center;font-variant-numeric:tabular-nums}
@@ -145,13 +139,13 @@ td.subjects-list-cell{font-size:.68rem;color:var(--muted);max-width:260px;line-h
 .pill.top{background:#d8f0dd;border-color:#9ecba6;color:#1a5c24}
 .pill.bottom{background:#fde8e3;border-color:#e8b0a2;color:#7a2010}
 .pill.missing{color:var(--muted);background:transparent;border-color:transparent;font-style:italic}
-.pill.gt{background:var(--gt-bg);border-color:var(--gt-border)}
+.pill.gt-pill{background:var(--gt-bg);border-color:var(--gt-border)}
 
 .position-badge{display:inline-flex;align-items:center;justify-content:center;width:1.8rem;height:1.8rem;border-radius:50%;font-size:.7rem;font-weight:500;background:var(--cream);border:1px solid var(--border)}
 .position-badge.p1{background:#f0d060;border-color:#c9a030;color:#5a3a00}
 .position-badge.p2{background:#d8d8d8;border-color:#aaa;color:#333}
 .position-badge.p3{background:#e8c498;border-color:#c09060;color:#5a3010}
-.position-badge.top30{background:var(--top30-bg);border-color:var(--top30-border)}
+.position-badge.ptop30{background:var(--top30-bg);border-color:var(--top30-border)}
 
 .has-tip{position:relative;cursor:help;border-bottom:1px dashed var(--muted)}
 .has-tip:hover::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);font-size:.65rem;padding:.3rem .6rem;border-radius:3px;white-space:nowrap;pointer-events:none;margin-bottom:4px;z-index:10}
@@ -175,12 +169,11 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
 </head>
 <body>
 
-<div class="masthead" style="text-align: center;">
+<div class="masthead">
   <h1>Rank<em>Forge</em></h1>
   <p class="tagline">Parse · Rank · Compare</p>
 </div>
 
-<!-- Instructions -->
 <div class="panel">
   <div class="panel-header" onclick="togglePanel(this)">
     <h3>How to generate the PDF from Sentral</h3>
@@ -195,36 +188,32 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
   </div>
 </div>
 
-<!-- Settings -->
 <div class="settings">
   <div class="settings-grid">
     <div class="setting-label-group">
       <label for="yearSelect">Year Group</label>
-      <span class="hint">Sets which class codes to recognise. Selecting Year 7–10 also enables maths grouping and G&T class detection.</span>
+      <span class="hint">Sets which class codes to recognise. Years 7–10 also enables maths grouping and G&amp;T class splitting.</span>
     </div>
     <div class="setting-control">
-      <select id="yearSelect" onchange="onYearChange()">
-        <option value="7">Year 7</option>
-        <option value="8">Year 8</option>
-        <option value="9">Year 9</option>
-        <option value="10">Year 10</option>
-        <option value="11">Year 11</option>
-        <option value="12" selected>Year 12</option>
+      <select id="yearSelect" onchange="onScoreModeChange()">
+        <option value="7">Year 7</option><option value="8">Year 8</option>
+        <option value="9">Year 9</option><option value="10">Year 10</option>
+        <option value="11">Year 11</option><option value="12" selected>Year 12</option>
       </select>
     </div>
     <div class="setting-label-group">
       <label for="scoreMode">Score mode</label>
-      <span class="hint">Rank mode extracts X/Y ranks. Percentage mode extracts % marks and compares via z-scores relative to the cohort per subject.</span>
+      <span class="hint">Rank mode extracts X/Y ranks. Percentage mode extracts % marks and ranks via z-score per subject.</span>
     </div>
     <div class="setting-control">
       <select id="scoreMode" onchange="onScoreModeChange()">
         <option value="rank">Rank (e.g. 17/61) — sort by lowest</option>
-        <option value="percent">Percentage mark (e.g. 87%) — z-score comparison</option>
+        <option value="percent">Percentage mark (e.g. 87%) — z-score</option>
       </select>
     </div>
     <div class="setting-label-group">
       <label for="rankKey" id="rankKeyLabel">Rank search key</label>
-      <span class="hint" id="rankKeyHint">The text just before the score in the PDF. Change if your reports use different wording.</span>
+      <span class="hint">The text just before the score in the PDF.</span>
     </div>
     <div class="setting-control">
       <input type="text" id="rankKey" value="Overall Assessment Rank" placeholder="e.g. Overall Assessment Rank"/>
@@ -232,7 +221,6 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
   </div>
 </div>
 
-<!-- Upload -->
 <div class="upload-zone" id="uploadZone">
   <input type="file" id="fileInput" accept=".pdf"/>
   <span class="upload-icon">📄</span>
@@ -243,7 +231,6 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
 <div id="status"></div>
 <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
 
-<!-- Results -->
 <div class="results" id="results">
   <div class="actions">
     <button class="btn" onclick="exportCSV('ranks')">⬇ Export scores CSV</button>
@@ -251,18 +238,14 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
     <button class="btn secondary" onclick="resetTool()">↺ Load another PDF</button>
   </div>
 
-  <!-- Weighting + grouping panel -->
   <div class="panel" id="penaltyPanel" style="display:none">
     <div class="panel-header" onclick="togglePanel(this)">
       <h3>Subject Weighting &amp; Maths Grouping</h3>
       <span class="panel-arrow">▶</span>
     </div>
-    <div class="panel-body" id="penaltyBody">
-      <!-- dynamic content injected here -->
-    </div>
+    <div class="panel-body" id="penaltyBody"></div>
   </div>
 
-  <!-- Table 1: all students -->
   <div class="collapsible-section">
     <div class="collapsible-header" id="header1" onclick="toggleSection('body1','header1','toggle1')">
       <h2>Subject Scores by Student</h2>
@@ -277,7 +260,6 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
     </div>
   </div>
 
-  <!-- Table 2: leaderboard -->
   <div class="collapsible-section">
     <div class="collapsible-header" id="header2" onclick="toggleSection('body2','header2','toggle2')">
       <h2>Overall Leaderboard</h2>
@@ -292,15 +274,14 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
     </div>
   </div>
 
-  <!-- Table 3: Top 30 (Years 7-10 only) -->
   <div class="collapsible-section" id="top30Section" style="display:none">
-    <div class="collapsible-header" id="header3" onclick="toggleSection('body3','header3','toggle3')" style="background:#b8960a">
+    <div class="collapsible-header" id="header3" onclick="toggleSection('body3','header3','toggle3')" style="background:#a07800">
       <h2>Top 30</h2>
       <span class="count" id="top30Count"></span>
       <span class="collapse-toggle" id="toggle3">collapse ▲</span>
     </div>
     <div class="collapsible-body" id="body3">
-      <div class="table-wrap" style="border-top:1px solid var(--top30-border)"><table id="top30Table"></table></div>
+      <div class="table-wrap" style="border-top:2px solid var(--top30-border)"><table id="top30Table"></table></div>
     </div>
   </div>
 
@@ -313,66 +294,57 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
 <footer>RankForge &mdash; Client-side only &mdash; PDF.js &mdash; No data transmitted</footer>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // ── State ──────────────────────────────────────────────────────────────────────
-let parsedData = null;
-let subjectWeights = {};
-let penaltyMode = 'category';
-let mathsGroups = [];        // [{id, name, codes:[]}]  codes = raw class codes e.g. "10MMA1"
-let mathsUnassigned = [];    // raw codes not yet in any group
-let dragChip = null;         // {code, fromGroupId} or {code, fromUnassigned:true}
-const subjectsVisible = {1:false, 2:false};
-const CAT = {easy:0.8, normal:1.0, hard:1.2};
-let groupIdCounter = 0;
+let parsedData=null;
+let subjectWeights={};
+let penaltyMode='category';
+let mathsGroups=[];       // [{id,name,codes:[]}]
+let mathsUnassigned=[];   // raw class codes not yet placed
+let dragCode=null;        // code string being dragged
+let dragFromZone=null;    // zone id string
+let groupIdSeq=0;
+const subjectsVisible={1:false,2:false};
+const CAT={easy:0.8,normal:1.0,hard:1.2};
 
-const isYr710 = () => parseInt(document.getElementById('yearSelect').value) <= 10;
+const yearVal=()=>parseInt(document.getElementById('yearSelect').value);
+const isJunior=()=>yearVal()<=10;
 
-// ── Panel toggle ───────────────────────────────────────────────────────────────
-function togglePanel(h){ const b=h.nextElementSibling; b.classList.toggle('open'); h.classList.toggle('open'); }
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function eH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function eA(s){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function togglePanel(h){const b=h.nextElementSibling;b.classList.toggle('open');h.classList.toggle('open')}
+function toggleSection(bi,hi,ti){const b=document.getElementById(bi),h=document.getElementById(hi),t=document.getElementById(ti);const c=b.classList.contains('hidden');b.classList.toggle('hidden');h.classList.toggle('collapsed',!c);t.textContent=c?'collapse ▲':'expand ▼'}
+function toggleSubjectsList(n){
+  subjectsVisible[n]=!subjectsVisible[n];const v=subjectsVisible[n];
+  const btn=document.getElementById('subjectsToggle'+n);btn.textContent=v?'☰ Hide subject list column':'☰ Show subject list column';btn.classList.toggle('active',v);
+  document.getElementById(n===1?'rankTable':'leaderTable').querySelectorAll('.col-subjects-list').forEach(el=>el.classList.toggle('hide',!v));
+}
+function setStatus(m,t=''){const e=document.getElementById('status');e.textContent=m;e.className=t}
+function setProgress(p){const b=document.getElementById('progressBar'),f=document.getElementById('progressFill');if(p===null){b.classList.remove('visible');return}b.classList.add('visible');f.style.width=p+'%'}
 
-// ── Year / score mode change ───────────────────────────────────────────────────
-function onYearChange(){ /* just cosmetic for now; re-parse on upload */ }
 function onScoreModeChange(){
-  const p = document.getElementById('scoreMode').value==='percent';
-  document.getElementById('rankKeyLabel').textContent = p?'Mark search key':'Rank search key';
-  const inp = document.getElementById('rankKey');
-  inp.placeholder = p?'e.g. Assessment Mark':'e.g. Overall Assessment Rank';
-  if(p && inp.value==='Overall Assessment Rank') inp.value='Assessment Mark';
-  if(!p && inp.value==='Assessment Mark') inp.value='Overall Assessment Rank';
+  const p=document.getElementById('scoreMode').value==='percent';
+  document.getElementById('rankKeyLabel').textContent=p?'Mark search key':'Rank search key';
+  const inp=document.getElementById('rankKey');
+  inp.placeholder=p?'e.g. Assessment Mark':'e.g. Overall Assessment Rank';
+  if(p&&inp.value==='Overall Assessment Rank')inp.value='Assessment Mark';
+  if(!p&&inp.value==='Assessment Mark')inp.value='Overall Assessment Rank';
 }
 
 // ── Upload ─────────────────────────────────────────────────────────────────────
-const zone=document.getElementById('uploadZone'), fileInput=document.getElementById('fileInput');
+const zone=document.getElementById('uploadZone'),fileInput=document.getElementById('fileInput');
 zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over')});
 zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
 zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f&&f.type==='application/pdf')handleFile(f);else setStatus('Please drop a PDF file.','error')});
 fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
 
-function setStatus(m,t=''){const e=document.getElementById('status');e.textContent=m;e.className=t}
-function setProgress(p){const b=document.getElementById('progressBar'),f=document.getElementById('progressFill');if(p===null){b.classList.remove('visible');return}b.classList.add('visible');f.style.width=p+'%'}
-
-// ── Section toggles ────────────────────────────────────────────────────────────
-function toggleSection(bodyId,headerId,toggleId){
-  const b=document.getElementById(bodyId),h=document.getElementById(headerId),t=document.getElementById(toggleId);
-  const c=b.classList.contains('hidden');
-  b.classList.toggle('hidden');h.classList.toggle('collapsed',!c);t.textContent=c?'collapse ▲':'expand ▼';
-}
-function toggleSubjectsList(n){
-  subjectsVisible[n]=!subjectsVisible[n];const v=subjectsVisible[n];
-  const btn=document.getElementById('subjectsToggle'+n);
-  btn.textContent=v?'☰ Hide subject list column':'☰ Show subject list column';
-  btn.classList.toggle('active',v);
-  const tbl=document.getElementById(n===1?'rankTable':'leaderTable');
-  tbl.querySelectorAll('.col-subjects-list').forEach(el=>el.classList.toggle('hide',!v));
-}
-
-// ── PDF extraction ─────────────────────────────────────────────────────────────
 async function handleFile(file){
   setStatus('Loading PDF…');setProgress(5);
   const buf=await file.arrayBuffer();
   const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-  const n=pdf.numPages; let full='';
+  const n=pdf.numPages;let full='';
   for(let i=1;i<=n;i++){
     const pg=await pdf.getPage(i);const ct=await pg.getTextContent();
     const items=ct.items.slice().sort((a,b)=>{const dy=b.transform[5]-a.transform[5];return Math.abs(dy)>3?dy:a.transform[4]-b.transform[4]});
@@ -383,326 +355,374 @@ async function handleFile(file){
     setProgress(5+Math.round(i/n*60));
   }
   document.getElementById('rawText').textContent=full;
-  setProgress(70);setStatus('Parsing student data…');
-  const year=document.getElementById('yearSelect').value;
+  setProgress(70);setStatus('Parsing…');
+  const yr=document.getElementById('yearSelect').value;
   const key=document.getElementById('rankKey').value.trim()||'Overall Assessment Rank';
   const mode=document.getElementById('scoreMode').value;
-  parsedData=parseText(full,year,key,mode);
+  parsedData=parseText(full,yr,key,mode);
   setProgress(90);
-  if(!parsedData.students.length){setStatus('No student data found. Check the debug panel below.','error');document.getElementById('results').classList.add('visible');setProgress(null);return}
+  if(!parsedData.students.length){setStatus('No student data found. Check the debug panel.','error');document.getElementById('results').classList.add('visible');setProgress(null);return}
 
-  // Init weights
   subjectWeights={};
   parsedData.allSubjects.forEach(s=>{subjectWeights[s]=1.0});
 
-  // Init maths groups for Yr 7-10
   mathsGroups=[];mathsUnassigned=[];
-  if(isYr710()&&parsedData.mathsCodes.length){
-    mathsUnassigned=[...parsedData.mathsCodes];
-    mathsGroups=[{id:++groupIdCounter,name:'Group 1',codes:[]},{id:++groupIdCounter,name:'Group 2',codes:[]},{id:++groupIdCounter,name:'Group 3',codes:[]}];
+  if(isJunior()&&parsedData.mathsCodes.size){
+    mathsUnassigned=[...parsedData.mathsCodes].sort();
+    mathsGroups=[{id:++groupIdSeq,name:'Group 1',codes:[]},{id:++groupIdSeq,name:'Group 2',codes:[]},{id:++groupIdSeq,name:'Group 3',codes:[]}];
   }
 
-  // Reset toggles
   subjectsVisible[1]=false;subjectsVisible[2]=false;
   ['subjectsToggle1','subjectsToggle2'].forEach(id=>{const b=document.getElementById(id);b.classList.remove('active');b.textContent='☰ Show subject list column'});
 
+  document.getElementById('top30Section').style.display=isJunior()?'':'none';
   buildPenaltyPanel();
   renderTables();
   setProgress(null);
-  setStatus(`✓ Found ${parsedData.students.length} students across ${parsedData.allSubjects.length} subjects.`,'success');
+  setStatus(`✓ Found ${parsedData.students.length} students across ${parsedData.allSubjects.length} raw subjects.`,'success');
   document.getElementById('results').classList.add('visible');
   document.getElementById('uploadZone').style.display='none';
-  // Show top30 section for Yr 7-10
-  document.getElementById('top30Section').style.display=isYr710()?'':'none';
 }
 
 // ── Parser ─────────────────────────────────────────────────────────────────────
+// Class code: 1-2 digit year number + 2+ letters + alphanumeric tail
+// This is the key fix: match \b\d{1,2}[A-Z]{2,}[\dA-Z]* at WORD boundary so SIT10216 doesn't match
 function parseText(text,year,rankKey,scoreMode){
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   const studentRe=/^([A-Z][A-Z'\-]+(?:\s+[A-Z][A-Z'\-]+)*,\s+[A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]*)*)\s+Semester\b/;
+
+  // Class code pattern: year digits at start of a word, followed by letters then alphanums
+  // e.g. 12MXX1, 10MMA1, 7ENG1, 10THO1
+  // We require it to be preceded by a space (or start) so SIT10216 won't match
   const ey=year.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const subjectRe=new RegExp(`^(.+?)(?:\\s+-\\s+(?:HSC|Preliminary)?)?\\s+${ey}[A-Z]{2,}[\\dA-Z]*`);
-  // Also capture the raw class code
-  const subjectCodeRe=new RegExp(`^(.+?)(?:\\s+-\\s+(?:HSC|Preliminary)?)?\\s+(${ey}[A-Z]{2,}[\\dA-Z]*)`);
+  // subject name = everything before the class code token
+  const subjectCodeRe=new RegExp(`^(.*?)\\s+(${ey}[A-Z]{2,}[\\dA-Z]*)(?:\\s|$)`);
+
   const ek=rankKey.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const rankRe=new RegExp(`${ek}[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`,'i');
   const pctRe=new RegExp(`${ek}[:\\s]+(\\d+(?:\\.\\d+)?)\\s*%`,'i');
-  // G&T suffix detection: ends with T, X, TR or TG (before any trailing digits)
-  const gtRe=new RegExp(`${ey}[A-Z]+(T|X|TR|TG)\\d*$`,'i');
-  // Maths code: contains MMA
+
+  // G&T: class code ends with T, X, TR, or TG (before optional trailing digits)
+  // Only relevant for years 7-10
+  const juniorYear=parseInt(year)<=10;
+  const gtCodeRe=/(?:TR|TG|T|X)\d*$/i;
+  // Maths: code contains MMA
   const mathsCodeRe=new RegExp(`^${ey}MMA`,'i');
 
-  const students=[];let cur=null,pend=null,pendCode=null;
+  const students=[];
+  let cur=null,pendName=null,pendCode=null;
   const mathsCodesSet=new Set();
+  // subjectRegistry: name -> {isGT, baseName}
+  const subjectRegistry={};
 
   for(const line of lines){
     if(line.includes('--- PAGE BREAK ---'))continue;
+
     const sm=line.match(studentRe);
-    if(sm){cur={name:sm[1].trim(),subjects:[],mathsCode:null};students.push(cur);pend=null;pendCode=null;continue}
+    if(sm){cur={name:sm[1].trim(),subjects:[],mathsCode:null};students.push(cur);pendName=null;pendCode=null;continue}
     if(!cur)continue;
+
     if(scoreMode==='percent'){
       const pm=line.match(pctRe);
-      if(pm&&pend){cur.subjects.push({name:pend,code:pendCode,score:parseFloat(pm[1]),isGT:pendCode?gtRe.test(pendCode):false});pend=null;pendCode=null;continue}
+      if(pm&&pendName){
+        const isGT=juniorYear&&pendCode?gtCodeRe.test(pendCode):false;
+        const effName=isGT?pendName+' (G&T)':pendName;
+        cur.subjects.push({name:effName,code:pendCode,score:parseFloat(pm[1]),isGT});
+        if(!(effName in subjectRegistry))subjectRegistry[effName]={isGT,baseName:pendName};
+        if(pendCode&&mathsCodeRe.test(pendCode)){mathsCodesSet.add(pendCode);cur.mathsCode=pendCode}
+        pendName=null;pendCode=null;continue;
+      }
     } else {
       const rm=line.match(rankRe);
-      if(rm&&pend){cur.subjects.push({name:pend,code:pendCode,rank:parseInt(rm[1]),total:parseInt(rm[2]),isGT:pendCode?gtRe.test(pendCode):false});pend=null;pendCode=null;continue}
+      if(rm&&pendName){
+        const isGT=juniorYear&&pendCode?gtCodeRe.test(pendCode):false;
+        const effName=isGT?pendName+' (G&T)':pendName;
+        cur.subjects.push({name:effName,code:pendCode,rank:parseInt(rm[1]),total:parseInt(rm[2]),isGT});
+        if(!(effName in subjectRegistry))subjectRegistry[effName]={isGT,baseName:pendName};
+        if(pendCode&&mathsCodeRe.test(pendCode)){mathsCodesSet.add(pendCode);cur.mathsCode=pendCode}
+        pendName=null;pendCode=null;continue;
+      }
     }
+
     const scm=line.match(subjectCodeRe);
     if(scm){
-      pend=scm[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/,'').trim();
+      pendName=scm[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/,'').trim();
       pendCode=scm[2]||null;
-      if(pendCode&&mathsCodeRe.test(pendCode)){mathsCodesSet.add(pendCode);cur.mathsCode=pendCode}
     }
   }
 
   const subjectSet=new Set();
   students.forEach(s=>s.subjects.forEach(sub=>subjectSet.add(sub.name)));
-  const allSubjects=[...subjectSet].sort();
-  const mathsCodes=[...mathsCodesSet].sort();
-  return {students,allSubjects,mathsCodes,scoreMode};
-}
-
-// ── G&T detection ──────────────────────────────────────────────────────────────
-function isGTSubject(subjectName){
-  // Look up in parsed data — check if any subject entry for this name has isGT
-  if(!parsedData)return false;
-  for(const st of parsedData.students){
-    const s=st.subjects.find(x=>x.name===subjectName);
-    if(s&&s.isGT)return true;
+  // Exclude raw maths subject names — they'll appear via groups
+  const mathsBaseNames=new Set();
+  if(juniorYear){
+    students.forEach(st=>{
+      if(st.mathsCode){
+        st.subjects.filter(s=>mathsCodeRe.test(s.code||'')).forEach(s=>mathsBaseNames.add(s.name));
+      }
+    });
   }
-  return false;
+  const allSubjects=[...subjectSet].filter(s=>!mathsBaseNames.has(s)).sort();
+
+  return{students,allSubjects,mathsCodes:mathsCodesSet,subjectRegistry,scoreMode};
 }
 
 // ── Z-scores ───────────────────────────────────────────────────────────────────
-function computeZScores(students,allSubjects){
+function computeZScores(students,subjects){
   const stats={};
-  allSubjects.forEach(subj=>{
-    const scores=students.map(st=>{const s=st.subjects.find(x=>x.name===subj);return s?s.score:null}).filter(v=>v!==null);
+  subjects.forEach(subj=>{
+    const scores=students.map(st=>{const s=st.subjects.find(x=>x.name===subj);return s!=null?s.score:null}).filter(v=>v!==null);
     if(!scores.length){stats[subj]={mean:0,sd:1};return}
     const mean=scores.reduce((a,b)=>a+b,0)/scores.length;
     const sd=Math.sqrt(scores.reduce((a,b)=>a+(b-mean)**2,0)/scores.length)||1;
     stats[subj]={mean,sd};
   });
-  return students.map(st=>({...st,subjects:st.subjects.map(s=>({...s,z:(s.score-stats[s.name].mean)/stats[s.name].sd}))}));
+  return students.map(st=>({...st,subjects:st.subjects.map(s=>({...s,z:stats[s.name]?(s.score-stats[s.name].mean)/stats[s.name].sd:0}))}));
 }
 
-// ── Get resolved subject name (handles maths grouping) ────────────────────────
-function resolvedSubjectName(subjectName, studentMathsCode){
-  // Maths grouping
-  if (isYr710() && parsedData && parsedData.mathsCodes.length && /math/i.test(subjectName)){
-    if(studentMathsCode){
-      const grp = mathsGroups.find(g => g.codes.includes(studentMathsCode));
-      return grp ? 'Maths: ' + grp.name : 'Maths: Unassigned ('+studentMathsCode+')';
-    }
-    return subjectName;
-  }
-
-  // G&T subjects
-  if(parsedData && parsedData.scoreMode==='percent'){
-    // Check if the subject has any G&T code
-    const gtEntry = parsedData.students.some(st => {
-      const s = st.subjects.find(sub => sub.name === subjectName);
-      return s && s.isGT;
-    });
-    if(gtEntry) return subjectName + ' G&T';
-  }
-
-  return subjectName;
+// ── Maths group resolution ─────────────────────────────────────────────────────
+function resolvedMathsName(studentMathsCode){
+  if(!studentMathsCode)return null;
+  const grp=mathsGroups.find(g=>g.codes.includes(studentMathsCode));
+  if(grp)return'Maths: '+grp.name;
+  return'Maths: Unassigned ('+studentMathsCode+')';
 }
 
-// ── Effective subjects list (with maths groups collapsed) ──────────────────────
+// Effective subjects: allSubjects + resolved maths group names
 function getEffectiveSubjects(workingStudents){
-  if(!isYr710()||!parsedData||!parsedData.mathsCodes.length)return parsedData.allSubjects;
-  const set=new Set();
-  workingStudents.forEach(st=>{
-    st.subjects.forEach(s=>{
-      set.add(resolvedSubjectName(s.name,st.mathsCode));
-    });
+  const base=parsedData.allSubjects.slice();
+  const mathsNames=new Set();
+  if(isJunior()&&parsedData.mathsCodes.size){
+    workingStudents.forEach(st=>{if(st.mathsCode)mathsNames.add(resolvedMathsName(st.mathsCode))});
+  }
+  return [...base,...[...mathsNames].sort()];
+}
+
+// Per-student map: effectiveSubjectName -> subject entry
+function buildSubMap(st){
+  const m={};
+  st.subjects.forEach(s=>{
+    const isMaths=parsedData.mathsCodes.size&&s.code&&/MMA/i.test(s.code);
+    if(isJunior()&&isMaths){
+      const mn=resolvedMathsName(st.mathsCode);
+      if(mn)m[mn]=s;
+    } else {
+      m[s.name]=s;
+    }
   });
-  return [...set].sort();
+  return m;
 }
 
 // ── Compute avg ────────────────────────────────────────────────────────────────
-function computeAvg(student,isPercent){
-  const subs=student.subjects;if(!subs.length)return null;
-  if(isPercent){let ws=0,wt=0;subs.forEach(s=>{const rn=resolvedSubjectName(s.name,student.mathsCode);const w=subjectWeights[rn]??subjectWeights[s.name]??1.0;ws+=s.z*w;wt+=w});return wt>0?ws/wt:null}
-  return subs.reduce((a,s)=>a+s.rank,0)/subs.length;
+function computeAvg(st,effSubjects,isPercent){
+  const sm=buildSubMap(st);
+  const entries=effSubjects.map(subj=>sm[subj]).filter(Boolean);
+  if(!entries.length)return null;
+  if(isPercent){
+    let ws=0,wt=0;
+    entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws+=s.z*w;wt+=w});
+    return wt>0?ws/wt:null;
+  }
+  return entries.reduce((a,s)=>a+s.rank,0)/entries.length;
 }
 
 // ── Build penalty panel ────────────────────────────────────────────────────────
 function buildPenaltyPanel(){
   const isPercent=parsedData.scoreMode==='percent';
-  const panel=document.getElementById('penaltyPanel');
-  const show=isPercent||isYr710();
-  panel.style.display=show?'':'none';
+  const show=isPercent||isJunior()&&parsedData.mathsCodes.size;
+  document.getElementById('penaltyPanel').style.display=show?'':'none';
   if(!show)return;
 
-  const body=document.getElementById('penaltyBody');
-
-  // Determine effective subjects for weighting
-  let workingStudents=parsedData.students;
-  if(isPercent)workingStudents=computeZScores(parsedData.students,parsedData.allSubjects);
-  const effSubjects=getEffectiveSubjects(workingStudents);
+  let ws=parsedData.students;
+  if(isPercent)ws=computeZScores(parsedData.students,parsedData.allSubjects);
+  const effSubjects=getEffectiveSubjects(ws);
 
   let html='';
 
-  // ── Weighting (percent mode only) ──
   if(isPercent){
     html+=`<div class="penalty-controls">
       <span class="penalty-mode-label">Difficulty mode:</span>
       <div class="seg-control">
-        <button id="modeBtnCategory" class="${penaltyMode==='category'?'active':''}" onclick="setPenaltyMode('category')">Easy / Normal / Hard</button>
-        <button id="modeBtnMultiplier" class="${penaltyMode==='multiplier'?'active':''}" onclick="setPenaltyMode('multiplier')">Custom multiplier</button>
+        <button class="${penaltyMode==='category'?'active':''}" onclick="setPenaltyMode('category')">Easy / Normal / Hard</button>
+        <button class="${penaltyMode==='multiplier'?'active':''}" onclick="setPenaltyMode('multiplier')">Custom multiplier</button>
       </div>
-      <div class="category-legend" id="categoryLegend" style="${penaltyMode==='multiplier'?'display:none':''}">
-        <span class="cat-badge easy">Easy ×0.8</span>
-        <span class="cat-badge normal">Normal ×1.0</span>
-        <span class="cat-badge hard">Hard ×1.2</span>
+      <div id="catLegend" class="category-legend" style="${penaltyMode==='multiplier'?'display:none':''}">
+        <span class="cat-badge easy">Easy ×0.8</span><span class="cat-badge normal">Normal ×1.0</span><span class="cat-badge hard">Hard ×1.2</span>
       </div>
     </div>`;
 
-    // Separate GT from regular
-    const gtSubjects=effSubjects.filter(s=>isGTSubject(s));
-    const regSubjects=effSubjects.filter(s=>!isGTSubject(s));
+    const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
+    const reg=effSubjects.filter(s=>!isGT(s));
+    const gt=effSubjects.filter(s=>isGT(s));
 
-    if(regSubjects.length){
-      html+='<div class="penalty-section-label">Regular subjects</div><div class="penalty-grid" id="penaltyGridReg">';
-      regSubjects.forEach(subj=>{html+=penaltyRowHTML(subj,false)});
+    if(reg.length){
+      html+='<div class="penalty-section-label">Regular subjects</div><div class="penalty-grid">';
+      reg.forEach(s=>{html+=penaltyRowHTML(s,false)});
       html+='</div>';
     }
-    if(gtSubjects.length){
-      html+='<div class="penalty-section-label">Gifted &amp; Talented classes</div><div class="penalty-grid" id="penaltyGridGT">';
-      gtSubjects.forEach(subj=>{html+=penaltyRowHTML(subj,true)});
+    if(gt.length){
+      html+=`<div class="penalty-section-label">Gifted &amp; Talented classes
+        <button class="apply-all-btn" onclick="showApplyAllGT()">Apply same weight to all G&amp;T</button>
+      </div>
+      <div id="applyAllGTRow" style="display:none">
+        <div class="apply-all-row">
+          <label>Set all G&amp;T to:</label>
+          <select id="applyAllCat" style="${penaltyMode==='multiplier'?'display:none':''}">
+            <option value="easy">Easy ×0.8</option><option value="normal" selected>Normal ×1.0</option><option value="hard">Hard ×1.2</option>
+          </select>
+          <input type="number" id="applyAllMult" min="0" max="5" step="0.05" value="1.00" style="${penaltyMode==='category'?'display:none':''}"/>
+          <button onclick="doApplyAllGT()">Apply</button>
+        </div>
+      </div>
+      <div class="penalty-grid" id="gtPenaltyGrid">`;
+      gt.forEach(s=>{html+=penaltyRowHTML(s,true)});
       html+='</div>';
     }
     html+=`<button class="penalty-apply-btn" onclick="applyWeights()">Apply weights &amp; re-rank</button>`;
   }
 
-  // ── Maths grouping (Yr 7-10) ──
-  if(isYr710()&&parsedData.mathsCodes.length){
+  // Maths grouping section
+  if(isJunior()&&parsedData.mathsCodes.size){
     html+=`<div class="penalty-section-label" style="margin-top:${isPercent?'1.5rem':'0'}">Maths class grouping</div>
-    <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">Drag maths class codes into groups. Each group will appear as a separate course column and can be weighted independently. Students not in any group will show their raw class code.</p>
+    <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">
+      Drag maths class codes into groups. Each group becomes a separate course column that can be weighted independently.
+      <strong>Click a group name to rename it inline.</strong> Students with unassigned codes will show their raw class code.
+    </p>
     <div class="maths-group-controls">
       <button class="add-group-btn" onclick="addMathsGroup()">+ Add group</button>
     </div>
-    <div class="maths-groups-container" id="mathsGroupsContainer"></div>`;
+    <div class="maths-groups-container" id="mathsGroupsContainer"></div>
+    <button class="penalty-apply-btn" style="margin-top:.75rem" onclick="renderTables()">Apply grouping &amp; re-render</button>`;
   }
 
-  body.innerHTML=html;
-
-  if(isYr710()&&parsedData.mathsCodes.length)renderMathsGroups();
+  document.getElementById('penaltyBody').innerHTML=html;
+  if(isJunior()&&parsedData.mathsCodes.size)renderMathsGroups();
 }
 
 function penaltyRowHTML(subj,isGT){
   const w=subjectWeights[subj]??1.0;
-  const cat=catFromWeight(w);
-  const rowStyle=weightStyle(w);
+  const rowStyle=wStyle(w);
   const gtTag=isGT?'<span class="gt-badge">G&T</span>':'';
   if(penaltyMode==='category'){
-    return `<div class="penalty-row" id="pr_${CSS.escape(subj)}" style="${rowStyle}" data-subject="${escAttr(subj)}">
-      <span class="penalty-subject-name">${escHTML(subj)}</span>${gtTag}
-      <select class="cat-select" onchange="onCatChange(this,'${escAttr(subj)}')">
+    const cat=catFromW(w);
+    return`<div class="penalty-row" style="${rowStyle}">
+      <span class="penalty-subject-name">${eH(subj)}</span>${gtTag}
+      <select class="cat-select" onchange="onCatChange(this,'${eA(subj)}')">
         <option value="easy"${cat==='easy'?' selected':''}>Easy</option>
         <option value="normal"${cat==='normal'?' selected':''}>Normal</option>
         <option value="hard"${cat==='hard'?' selected':''}>Hard</option>
       </select></div>`;
-  } else {
-    return `<div class="penalty-row" id="pr_${CSS.escape(subj)}" data-subject="${escAttr(subj)}">
-      <span class="penalty-subject-name">${escHTML(subj)}</span>${gtTag}
-      <input type="number" min="0" max="5" step="0.05" value="${w.toFixed(2)}" onchange="onMultChange(this,'${escAttr(subj)}')"/></div>`;
   }
+  return`<div class="penalty-row">
+    <span class="penalty-subject-name">${eH(subj)}</span>${gtTag}
+    <input type="number" min="0" max="5" step="0.05" value="${w.toFixed(2)}" onchange="onMultChange(this,'${eA(subj)}')"/></div>`;
 }
 
-function catFromWeight(w){return w<=0.85?'easy':w>=1.15?'hard':'normal'}
-function weightStyle(w){
-  if(w<1)return'border-color:#a8d0a8;background:#e8f4e8';
-  if(w>1)return'border-color:#a8b8d8;background:#e8eef8';
-  return'';
-}
-function onCatChange(sel,subj){subjectWeights[subj]=CAT[sel.value];const row=sel.closest('.penalty-row');row.style.cssText=weightStyle(CAT[sel.value])}
+function catFromW(w){return w<=0.85?'easy':w>=1.15?'hard':'normal'}
+function wStyle(w){return w<1?'border-color:#a8d0a8;background:#e8f4e8':w>1?'border-color:#a8b8d8;background:#e8eef8':''}
+function onCatChange(sel,subj){subjectWeights[subj]=CAT[sel.value];sel.closest('.penalty-row').style.cssText=wStyle(CAT[sel.value])}
 function onMultChange(inp,subj){subjectWeights[subj]=parseFloat(inp.value)||1.0}
-function setPenaltyMode(m){
-  penaltyMode=m;
-  document.getElementById('modeBtnCategory').classList.toggle('active',m==='category');
-  document.getElementById('modeBtnMultiplier').classList.toggle('active',m==='multiplier');
-  document.getElementById('categoryLegend').style.display=m==='multiplier'?'none':'flex';
-  if(parsedData)buildPenaltyPanel();
-}
+function setPenaltyMode(m){penaltyMode=m;if(parsedData)buildPenaltyPanel()}
 function applyWeights(){if(parsedData)renderTables()}
 
-// ── Maths groups drag UI ───────────────────────────────────────────────────────
+function showApplyAllGT(){
+  const row=document.getElementById('applyAllGTRow');
+  row.style.display=row.style.display==='none'?'':'none';
+}
+function doApplyAllGT(){
+  const isPercent=parsedData.scoreMode==='percent';
+  const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
+  let w;
+  if(penaltyMode==='category'){w=CAT[document.getElementById('applyAllCat').value]}
+  else{w=parseFloat(document.getElementById('applyAllMult').value)||1.0}
+  parsedData.allSubjects.filter(s=>isGT(s)).forEach(s=>{subjectWeights[s]=w});
+  // rebuild grid only
+  const grid=document.getElementById('gtPenaltyGrid');
+  if(grid){
+    const gtSubjects=getEffectiveSubjects(parsedData.students).filter(s=>isGT(s));
+    grid.innerHTML=gtSubjects.map(s=>penaltyRowHTML(s,true)).join('');
+  }
+  document.getElementById('applyAllGTRow').style.display='none';
+}
+
+// ── Maths drag & drop ──────────────────────────────────────────────────────────
 function renderMathsGroups(){
-  const container=document.getElementById('mathsGroupsContainer');
-  if(!container)return;
+  const c=document.getElementById('mathsGroupsContainer');if(!c)return;
   let html='';
-
-  // Unassigned pool
-  html+=`<div class="maths-unassigned" id="dropUnassigned">
+  // Unassigned
+  html+=`<div class="maths-unassigned">
     <div class="maths-unassigned-header">Unassigned</div>
-    <div class="maths-drop-zone" id="dz_unassigned" ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event,'unassigned')">`;
-  mathsUnassigned.forEach(code=>{html+=chipHTML(code,'unassigned')});
-  html+='</div></div>';
-
+    <div class="maths-drop-zone" id="dz__unassigned">${mathsUnassigned.map(code=>chipHTML(code)).join('')}</div>
+  </div>`;
   // Groups
   mathsGroups.forEach(g=>{
-    html+=`<div class="maths-group-col" id="grp_${g.id}">
+    html+=`<div class="maths-group-col">
       <div class="maths-group-header">
-        <input class="maths-group-name-input" value="${escAttr(g.name)}" placeholder="Group name" onchange="renameGroup(${g.id},this.value)" title="Click to rename"/>
-        <button class="remove-group-btn" onclick="removeGroup(${g.id})" title="Remove group">✕</button>
+        <input class="maths-group-name-input" value="${eA(g.name)}" placeholder="Group name" onchange="renameGroup(${g.id},this.value)" title="Click to rename"/>
+        <button class="remove-group-btn" onclick="removeGroup(${g.id})">✕</button>
       </div>
-      <div class="maths-drop-zone" id="dz_${g.id}" ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event,${g.id})">`;
-    g.codes.forEach(code=>{html+=chipHTML(code,g.id)});
-    html+='</div></div>';
+      <div class="maths-drop-zone" id="dz__${g.id}">${g.codes.map(code=>chipHTML(code)).join('')}</div>
+    </div>`;
   });
-
-  container.innerHTML=html;
+  c.innerHTML=html;
+  attachDragListeners();
 }
 
-function chipHTML(code, groupId){
-  return `<div class="maths-class-chip" draggable="true" id="chip_${code}" 
-              ondragstart="chipDragStart(event,'${code}',${JSON.stringify(groupId)})">
-            ${escHTML(code)}
-            <button class="chip-remove" 
-                    onclick="event.stopPropagation(); moveChipTo('${code}','unassigned')" 
-                    title="Move to unassigned">✕</button>
-          </div>`;
+function chipHTML(code){
+  return`<div class="maths-class-chip" id="chip__${eA(code)}" draggable="true" data-code="${eA(code)}">${eH(code)}<button class="chip-x" data-code="${eA(code)}" title="Move to unassigned">✕</button></div>`;
 }
 
-function chipDragStart(e, code, fromGroupId){
-  e.stopPropagation(); // prevent bubbling to button
-  dragChip = { code, fromGroupId: fromGroupId === 'unassigned' ? 'unassigned' : Number(fromGroupId) };
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', code);
-}
-function dzOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over')}
-function dzLeave(e){e.currentTarget.classList.remove('drag-over')}
-function dzDrop(e,targetGroupId){
-  e.preventDefault();e.currentTarget.classList.remove('drag-over');
-  if(!dragChip)return;
-  moveChipTo(dragChip.code,targetGroupId);
-  dragChip=null;
+function attachDragListeners(){
+  // Chips
+  document.querySelectorAll('.maths-class-chip').forEach(chip=>{
+    chip.addEventListener('dragstart',e=>{
+      dragCode=chip.dataset.code;
+      dragFromZone=chip.closest('.maths-drop-zone').id;
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain',dragCode);
+      setTimeout(()=>chip.classList.add('dragging'),0);
+    });
+    chip.addEventListener('dragend',()=>{chip.classList.remove('dragging')});
+  });
+  // Chip remove buttons
+  document.querySelectorAll('.chip-x').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      moveCode(btn.dataset.code,'__unassigned');
+    });
+  });
+  // Drop zones
+  document.querySelectorAll('.maths-drop-zone').forEach(dz=>{
+    dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dz-over')});
+    dz.addEventListener('dragleave',e=>{if(!dz.contains(e.relatedTarget))dz.classList.remove('dz-over')});
+    dz.addEventListener('drop',e=>{
+      e.preventDefault();dz.classList.remove('dz-over');
+      const code=e.dataTransfer.getData('text/plain');
+      if(code)moveCode(code,dz.id);
+      dragCode=null;dragFromZone=null;
+    });
+  });
 }
 
-function moveChipTo(code,targetGroupId){
-  // Remove from current location
+function moveCode(code,targetZoneId){
+  // Remove from all locations
   mathsUnassigned=mathsUnassigned.filter(c=>c!==code);
   mathsGroups.forEach(g=>{g.codes=g.codes.filter(c=>c!==code)});
-  // Add to target
-  if(targetGroupId==='unassigned'){
+  if(targetZoneId==='__unassigned'||targetZoneId==='dz__unassigned'){
     mathsUnassigned.push(code);
   } else {
-    const g=mathsGroups.find(x=>x.id===targetGroupId||x.id===parseInt(targetGroupId));
+    // Extract group id from zone id "dz__<id>"
+    const idStr=targetZoneId.replace('dz__','');
+    const id=parseInt(idStr);
+    const g=mathsGroups.find(x=>x.id===id);
     if(g)g.codes.push(code);
+    else mathsUnassigned.push(code);
   }
   renderMathsGroups();
-  // Re-init weights for new group names
-  const effNames=[];
-  mathsGroups.forEach(g=>{if(g.codes.length)effNames.push('Maths: '+g.name)});
-  effNames.forEach(n=>{if(!(n in subjectWeights))subjectWeights[n]=1.0});
 }
 
 function addMathsGroup(){
-  mathsGroups.push({id:++groupIdCounter,name:'Group '+(mathsGroups.length+1),codes:[]});
+  mathsGroups.push({id:++groupIdSeq,name:'Group '+(mathsGroups.length+1),codes:[]});
   renderMathsGroups();
 }
 function removeGroup(id){
@@ -711,7 +731,12 @@ function removeGroup(id){
   renderMathsGroups();
 }
 function renameGroup(id,name){
-  const g=mathsGroups.find(x=>x.id===id);if(g){const old='Maths: '+g.name;g.name=name;const nw='Maths: '+name;if(old in subjectWeights){subjectWeights[nw]=subjectWeights[old];delete subjectWeights[old]}}
+  const g=mathsGroups.find(x=>x.id===id);
+  if(g){
+    const oldKey='Maths: '+g.name,newKey='Maths: '+name;
+    g.name=name;
+    if(oldKey in subjectWeights){subjectWeights[newKey]=subjectWeights[oldKey];delete subjectWeights[oldKey]}
+  }
 }
 
 // ── Render tables ──────────────────────────────────────────────────────────────
@@ -721,115 +746,102 @@ function renderTables(){
   const isPercent=scoreMode==='percent';
   let ws=isPercent?computeZScores(students,allSubjects):students;
   const effSubjects=getEffectiveSubjects(ws);
+  const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
 
-  // pill helper
-  function pillFor(s,subjectName,studentMathsCode){
+  function pillFor(s,subjName){
     if(!s)return'<span class="pill missing">—</span>';
-    const rn=resolvedSubjectName(subjectName,studentMathsCode);
-    const gt=isGTSubject(rn)||isGTSubject(subjectName);
+    const gt=isGT(subjName);
     if(isPercent){
       const cls=s.score>=80?'top':s.score<50?'bottom':'';
-      return`<span class="pill ${cls}${gt?' gt':''}">${s.score.toFixed(1)}%</span>`;
+      return`<span class="pill ${cls}${gt?' gt-pill':''}">${s.score.toFixed(1)}%</span>`;
     } else {
-      const ratio=s.rank/s.total;const cls=ratio<=0.25?'top':ratio>=0.75?'bottom':'';
-      return`<span class="pill ${cls}${gt?' gt':''}">${s.rank}/${s.total}</span>`;
+      const r=s.rank/s.total;const cls=r<=0.25?'top':r>=0.75?'bottom':'';
+      return`<span class="pill ${cls}${gt?' gt-pill':''}">${s.rank}/${s.total}</span>`;
     }
   }
 
-  // Build per-student effective subject map (maths resolved)
-  function buildSubMap(student){
-    const m={};
-    student.subjects.forEach(s=>{
-      const rn=resolvedSubjectName(s.name,student.mathsCode);
-      m[rn]=s;
-    });
-    return m;
+  function thFor(s){
+    const gt=isGT(s);
+    return`<th class="center"${gt?' style="border-bottom:2px solid var(--gt-border)"':''}>${eH(s)}${gt?' <span style="font-size:.55rem;color:var(--gt-border)">G&T</span>':''}</th>`;
   }
 
   // ── Table 1 ──
   document.getElementById('rankCount').textContent=`${students.length} students · ${effSubjects.length} subjects`;
-  let h=`<thead><tr><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects Found</th>`;
-  effSubjects.forEach(s=>{
-    const gt=isGTSubject(s);
-    h+=`<th class="center"${gt?' style="border-bottom:2px solid var(--gt-border)"':''}>${escHTML(s)}${gt?' <span style="font-size:.55rem;color:var(--gt-border)">G&T</span>':''}</th>`;
-  });
+  let h=`<thead><tr><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects</th>`;
+  effSubjects.forEach(s=>{h+=thFor(s)});
   h+='</tr></thead><tbody>';
   ws.forEach(st=>{
     const sm=buildSubMap(st);
-    const subList=effSubjects.filter(subj=>sm[subj]).join(', ');
-    h+=`<tr><td class="name">${escHTML(st.name)}</td><td class="subjects-list-cell col-subjects-list hide">${escHTML(subList)||'—'}</td><td class="center">${st.subjects.length}</td>`;
-    effSubjects.forEach(subj=>{
-      const s=sm[subj];
-      h+=`<td class="center">${s?pillFor(s,subj,st.mathsCode):'<span class="pill missing">—</span>'}</td>`;
-    });
+    const subList=effSubjects.filter(s=>sm[s]).join(', ');
+    h+=`<tr><td class="name">${eH(st.name)}</td><td class="subjects-list-cell col-subjects-list hide">${eH(subList)||'—'}</td><td class="center">${Object.keys(sm).length}</td>`;
+    effSubjects.forEach(s=>{h+=`<td class="center">${pillFor(sm[s],s)}</td>`});
     h+='</tr>';
   });
   h+='</tbody>';
   document.getElementById('rankTable').innerHTML=h;
   if(!subjectsVisible[1])document.getElementById('rankTable').querySelectorAll('.col-subjects-list').forEach(el=>el.classList.add('hide'));
 
-  // ── Leaderboard ──
-  const withAvg=ws.map(st=>({...st,avg:computeAvg(st,isPercent),rawZ:isPercent?st.subjects.reduce((a,s)=>a+s.z,0)/Math.max(st.subjects.length,1):null}))
-    .sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return -1;return isPercent?b.avg-a.avg:a.avg-b.avg});
-
+  // Compute rankings
   const anyW=isPercent&&effSubjects.some(s=>(subjectWeights[s]??1.0)!==1.0);
-  document.getElementById('boardCount').textContent=isPercent?(anyW?'Weighted avg z-score':'Avg z-score'):'Lowest average rank';
-  const scoreLabel=isPercent?(anyW?'Wtd. Avg Z':'Avg Z-Score'):'Avg Rank';
-
-  let h2=`<thead><tr><th class="center">Position</th><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects Found</th><th class="center">${scoreLabel}</th>`;
-  effSubjects.forEach(s=>{
-    const gt=isGTSubject(s);
-    h2+=`<th class="center"${gt?' style="border-bottom:2px solid var(--gt-border)"':''}>${escHTML(s)}${gt?' <span style="font-size:.55rem;color:var(--gt-border)">G&T</span>':''}</th>`;
-  });
-  h2+='</tr></thead><tbody>';
-
-  withAvg.forEach((st,idx)=>{
-    const pos=idx+1;
-    const isTop30=isYr710()&&pos<=30;
-    const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
-    const pCls=pos===1?'p1':pos===2?'p2':pos===3?'p3':isTop30?'top30':'';
-    const rowCls=pos===1?'gold':isTop30?'top30':'';
+  const ranked=ws.map(st=>{
     const sm=buildSubMap(st);
-    const subList=effSubjects.filter(subj=>sm[subj]).join(', ');
-    let avgCell;
-    if(st.avg===null){avgCell='—'}
-    else if(isPercent){
-      const disp=st.avg.toFixed(3);
-      avgCell=anyW&&st.rawZ!==null?`<span class="has-tip" data-tip="Unweighted avg z: ${st.rawZ.toFixed(3)}">${disp}</span>`:disp;
-    } else {avgCell=st.avg.toFixed(2)}
+    const entries=effSubjects.map(s=>sm[s]).filter(Boolean);
+    let avg=null,rawZ=null;
+    if(entries.length){
+      if(isPercent){
+        let ws2=0,wt=0;entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws2+=s.z*w;wt+=w});
+        avg=wt>0?ws2/wt:null;
+        rawZ=entries.reduce((a,s)=>a+s.z,0)/entries.length;
+      } else {
+        avg=entries.reduce((a,s)=>a+s.rank,0)/entries.length;
+      }
+    }
+    return{...st,avg,rawZ,sm};
+  }).sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return-1;return isPercent?b.avg-a.avg:a.avg-b.avg});
 
-    h2+=`<tr class="${rowCls}">
-      <td class="center"><span class="position-badge ${pCls}">${medal||pos}</span></td>
-      <td class="name">${escHTML(st.name)}</td>
-      <td class="subjects-list-cell col-subjects-list hide">${escHTML(subList)||'—'}</td>
-      <td class="center">${st.subjects.length}</td>
-      <td class="center" style="font-weight:500">${avgCell}</td>`;
-    effSubjects.forEach(subj=>{const s=sm[subj];h2+=`<td class="center">${s?pillFor(s,subj,st.mathsCode):'<span class="pill missing">—</span>'}</td>`});
-    h2+='</tr>';
-  });
-  h2+='</tbody>';
+  const scoreLabel=isPercent?(anyW?'Wtd Avg Z':'Avg Z-Score'):'Avg Rank';
+  document.getElementById('boardCount').textContent=isPercent?(anyW?'Weighted avg z-score':'Avg z-score'):'Lowest average rank';
+
+  function leaderRows(list,showTop30Class){
+    return list.map((st,idx)=>{
+      const pos=idx+1;
+      const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
+      const pBadge=pos===1?'p1':pos===2?'p2':pos===3?'p3':showTop30Class&&pos<=30?'ptop30':'';
+      const rowCls=pos===1?'gold':showTop30Class&&pos<=30?'top30':'';
+      let avgCell;
+      if(st.avg===null){avgCell='—'}
+      else if(isPercent){
+        const d=st.avg.toFixed(3);
+        avgCell=anyW&&st.rawZ!==null?`<span class="has-tip" data-tip="Unweighted avg z: ${st.rawZ.toFixed(3)}">${d}</span>`:d;
+      } else {avgCell=st.avg.toFixed(2)}
+      let r=`<tr class="${rowCls}"><td class="center"><span class="position-badge ${pBadge}">${medal||pos}</span></td><td class="name">${eH(st.name)}</td>`;
+      if(showTop30Class!==false)r+=`<td class="subjects-list-cell col-subjects-list hide">${eH(effSubjects.filter(s=>st.sm[s]).join(', '))||'—'}</td>`;
+      r+=`<td class="center">${Object.keys(st.sm).length}</td><td class="center" style="font-weight:500">${avgCell}</td>`;
+      effSubjects.forEach(s=>{r+=`<td class="center">${pillFor(st.sm[s],s)}</td>`});
+      r+='</tr>';return r;
+    }).join('');
+  }
+
+  // ── Table 2 ──
+  let h2=`<thead><tr><th class="center">Pos</th><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects</th><th class="center">${scoreLabel}</th>`;
+  effSubjects.forEach(s=>{h2+=thFor(s)});
+  h2+=`</tr></thead><tbody>${leaderRows(ranked,isJunior())}</tbody>`;
   document.getElementById('leaderTable').innerHTML=h2;
   if(!subjectsVisible[2])document.getElementById('leaderTable').querySelectorAll('.col-subjects-list').forEach(el=>el.classList.add('hide'));
 
-  // ── Top 30 ──
-  if(isYr710()){
-    const top30=withAvg.slice(0,30);
-    document.getElementById('top30Count').textContent=`${top30.length} students`;
-    let h3=`<thead><tr><th class="center">Position</th><th>Student</th><th class="center">Subjects Found</th><th class="center">${scoreLabel}</th>`;
-    effSubjects.forEach(s=>{const gt=isGTSubject(s);h3+=`<th class="center"${gt?' style="border-bottom:2px solid var(--gt-border)"':''}>${escHTML(s)}</th>`});
+  // ── Table 3: Top 30 ──
+  if(isJunior()){
+    const top30=ranked.slice(0,30);
+    document.getElementById('top30Count').textContent=top30.length+' students';
+    let h3=`<thead><tr><th class="center">Pos</th><th>Student</th><th class="center">Subjects</th><th class="center">${scoreLabel}</th>`;
+    effSubjects.forEach(s=>{h3+=thFor(s)});
     h3+='</tr></thead><tbody>';
     top30.forEach((st,idx)=>{
-      const pos=idx+1;
-      const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
-      const pCls=pos===1?'p1':pos===2?'p2':pos===3?'p3':'top30';
-      const sm=buildSubMap(st);
+      const pos=idx+1;const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
+      const pBadge=pos===1?'p1':pos===2?'p2':pos===3?'p3':'ptop30';
       let avgCell=st.avg===null?'—':isPercent?(anyW&&st.rawZ!==null?`<span class="has-tip" data-tip="Unweighted: ${st.rawZ.toFixed(3)}">${st.avg.toFixed(3)}</span>`:st.avg.toFixed(3)):st.avg.toFixed(2);
-      h3+=`<tr class="top30">
-        <td class="center"><span class="position-badge ${pCls}">${medal||pos}</span></td>
-        <td class="name">${escHTML(st.name)}</td>
-        <td class="center">${st.subjects.length}</td>
-        <td class="center" style="font-weight:500">${avgCell}</td>`;
-      effSubjects.forEach(subj=>{const s=sm[subj];h3+=`<td class="center">${s?pillFor(s,subj,st.mathsCode):'<span class="pill missing">—</span>'}</td>`});
+      h3+=`<tr class="top30"><td class="center"><span class="position-badge ${pBadge}">${medal||pos}</span></td><td class="name">${eH(st.name)}</td><td class="center">${Object.keys(st.sm).length}</td><td class="center" style="font-weight:500">${avgCell}</td>`;
+      effSubjects.forEach(s=>{h3+=`<td class="center">${pillFor(st.sm[s],s)}</td>`});
       h3+='</tr>';
     });
     h3+='</tbody>';
@@ -845,17 +857,21 @@ function exportCSV(which){
   const year=document.getElementById('yearSelect').value;
   let ws=isPercent?computeZScores(students,allSubjects):students;
   const effSubjects=getEffectiveSubjects(ws);
-  function buildSubMap(st){const m={};st.subjects.forEach(s=>{const rn=resolvedSubjectName(s.name,st.mathsCode);m[rn]=s});return m}
   function scoreStr(s){if(!s)return'';return isPercent?s.score.toFixed(1)+'%':`${s.rank}/${s.total}`}
   const sl=isPercent?'Avg Z-Score':'Avg Rank';
   let rows=[];
   if(which==='ranks'){
     rows.push(['Student','Subjects','Subjects Found',...effSubjects]);
-    ws.forEach(st=>{const sm=buildSubMap(st);rows.push([st.name,effSubjects.filter(s=>sm[s]).join('; '),st.subjects.length,...effSubjects.map(s=>scoreStr(sm[s]))])});
+    ws.forEach(st=>{const sm=buildSubMap(st);rows.push([st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,...effSubjects.map(s=>scoreStr(sm[s]))])});
   } else {
-    const wa=ws.map(st=>({...st,avg:computeAvg(st,isPercent)})).sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return -1;return isPercent?b.avg-a.avg:a.avg-b.avg});
+    const ranked=ws.map(st=>{
+      const sm=buildSubMap(st);const entries=effSubjects.map(s=>sm[s]).filter(Boolean);
+      let avg=null;
+      if(entries.length){if(isPercent){let ws2=0,wt=0;entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws2+=s.z*w;wt+=w});avg=wt>0?ws2/wt:null}else avg=entries.reduce((a,s)=>a+s.rank,0)/entries.length}
+      return{...st,avg,sm};
+    }).sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return-1;return isPercent?b.avg-a.avg:a.avg-b.avg});
     rows.push(['Position','Student','Subjects','Subjects Found',sl,...effSubjects]);
-    wa.forEach((st,i)=>{const sm=buildSubMap(st);rows.push([i+1,st.name,effSubjects.filter(s=>sm[s]).join('; '),st.subjects.length,st.avg!==null?st.avg.toFixed(3):'',...effSubjects.map(s=>scoreStr(sm[s]))])});
+    ranked.forEach((st,i)=>{const sm=st.sm;rows.push([i+1,st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,st.avg!=null?st.avg.toFixed(3):'',...effSubjects.map(s=>scoreStr(sm[s]))])});
   }
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
@@ -864,7 +880,7 @@ function exportCSV(which){
 
 // ── Reset ──────────────────────────────────────────────────────────────────────
 function resetTool(){
-  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dragCode=null;
   document.getElementById('results').classList.remove('visible');
   document.getElementById('uploadZone').style.display='';
   document.getElementById('fileInput').value='';
@@ -875,10 +891,6 @@ function resetTool(){
   ['header1','header2','header3'].forEach(id=>document.getElementById(id).classList.remove('collapsed'));
   ['toggle1','toggle2','toggle3'].forEach(id=>{document.getElementById(id).textContent='collapse ▲'});
 }
-
-// ── Utils ──────────────────────────────────────────────────────────────────────
-function escHTML(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function escAttr(s){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 </script>
 </body>
 </html>
