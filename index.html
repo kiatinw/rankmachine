@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Year 12 Report Analyser</title>
+<title>Report Analyser</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap');
@@ -13,9 +13,7 @@
     --paper: #f5f0e8;
     --cream: #ede7d6;
     --accent: #c84b2f;
-    --accent2: #2f6bc8;
     --muted: #8a8278;
-    --gold: #c9a84c;
     --border: rgba(26,24,20,0.15);
   }
 
@@ -29,7 +27,6 @@
     padding: 2rem;
   }
 
-  /* Grain overlay */
   body::before {
     content: '';
     position: fixed;
@@ -43,7 +40,7 @@
   .masthead {
     border-bottom: 2px solid var(--ink);
     padding-bottom: 1rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     display: flex;
     align-items: baseline;
     gap: 1.5rem;
@@ -57,10 +54,7 @@
     letter-spacing: -0.02em;
   }
 
-  .masthead h1 em {
-    font-style: italic;
-    color: var(--accent);
-  }
+  .masthead h1 em { font-style: italic; color: var(--accent); }
 
   .masthead .tagline {
     font-size: 0.7rem;
@@ -71,7 +65,45 @@
     padding-left: 1.5rem;
   }
 
-  /* Upload zone */
+  .settings {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem 1.5rem;
+    align-items: center;
+  }
+
+  .settings label {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .settings input[type="text"],
+  .settings select {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 0.4rem 0.6rem;
+    color: var(--ink);
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .settings input[type="text"]:focus,
+  .settings select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
   .upload-zone {
     border: 2px dashed var(--border);
     background: var(--cream);
@@ -81,7 +113,7 @@
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
     position: relative;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
   }
 
   .upload-zone:hover, .upload-zone.drag-over {
@@ -98,11 +130,7 @@
     height: 100%;
   }
 
-  .upload-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.75rem;
-    display: block;
-  }
+  .upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
 
   .upload-zone h2 {
     font-family: 'DM Serif Display', serif;
@@ -110,13 +138,8 @@
     margin-bottom: 0.4rem;
   }
 
-  .upload-zone p {
-    font-size: 0.75rem;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
+  .upload-zone p { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.05em; }
 
-  /* Status bar */
   #status {
     font-size: 0.75rem;
     letter-spacing: 0.08em;
@@ -125,28 +148,13 @@
     min-height: 1.2em;
     text-transform: uppercase;
   }
-
   #status.error { color: var(--accent); }
   #status.success { color: #2a7a3b; }
 
-  /* Progress */
-  .progress-bar {
-    height: 2px;
-    background: var(--cream);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-bottom: 2rem;
-    display: none;
-  }
+  .progress-bar { height: 2px; background: var(--cream); border-radius: 2px; overflow: hidden; margin-bottom: 2rem; display: none; }
   .progress-bar.visible { display: block; }
-  .progress-fill {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.3s;
-  }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
 
-  /* Results sections */
   .results { display: none; }
   .results.visible { display: block; }
 
@@ -159,36 +167,14 @@
     padding-bottom: 0.5rem;
   }
 
-  .section-header h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.6rem;
-  }
+  .section-header h2 { font-family: 'DM Serif Display', serif; font-size: 1.6rem; }
+  .section-header .count { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 
-  .section-header .count {
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 2rem; }
 
-  /* Tables */
-  .table-wrap {
-    overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    margin-bottom: 2rem;
-  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.78rem;
-  }
-
-  thead tr {
-    background: var(--ink);
-    color: var(--paper);
-  }
+  thead tr { background: var(--ink); color: var(--paper); }
 
   thead th {
     padding: 0.6rem 0.9rem;
@@ -200,37 +186,19 @@
     white-space: nowrap;
   }
 
-  thead th.rank-col {
-    text-align: center;
-  }
+  thead th.center { text-align: center; }
 
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: var(--cream); }
   tbody tr.gold { background: #fdf6e0; }
   tbody tr.gold:hover { background: #f9efcd; }
 
-  td {
-    padding: 0.55rem 0.9rem;
-    vertical-align: middle;
-  }
+  td { padding: 0.55rem 0.9rem; vertical-align: middle; }
+  td.name { font-family: 'DM Serif Display', serif; font-size: 0.95rem; white-space: nowrap; }
+  td.center { text-align: center; font-variant-numeric: tabular-nums; }
 
-  td.name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 0.95rem;
-    white-space: nowrap;
-  }
-
-  td.rank-cell {
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-  }
-
-  td.rank-cell .pill {
+  .pill {
     display: inline-block;
     padding: 0.15rem 0.5rem;
     border-radius: 2px;
@@ -239,21 +207,9 @@
     border: 1px solid var(--border);
     white-space: nowrap;
   }
-
-  td.rank-cell .pill.top { background: #d8f0dd; border-color: #9ecba6; color: #1a5c24; }
-  td.rank-cell .pill.bottom { background: #fde8e3; border-color: #e8b0a2; color: #7a2010; }
-  td.rank-cell .pill.missing { color: var(--muted); background: transparent; border-color: transparent; font-style: italic; }
-
-  td.avg {
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  .medal {
-    font-size: 1rem;
-    margin-right: 0.3rem;
-  }
+  .pill.top    { background: #d8f0dd; border-color: #9ecba6; color: #1a5c24; }
+  .pill.bottom { background: #fde8e3; border-color: #e8b0a2; color: #7a2010; }
+  .pill.missing { color: var(--muted); background: transparent; border-color: transparent; font-style: italic; }
 
   .position-badge {
     display: inline-flex;
@@ -267,12 +223,10 @@
     background: var(--cream);
     border: 1px solid var(--border);
   }
-
   .position-badge.p1 { background: #f0d060; border-color: #c9a030; color: #5a3a00; }
   .position-badge.p2 { background: #d8d8d8; border-color: #aaa; color: #333; }
   .position-badge.p3 { background: #e8c498; border-color: #c09060; color: #5a3010; }
 
-  /* Export button */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -288,67 +242,40 @@
     cursor: pointer;
     border-radius: 2px;
     transition: background 0.15s, color 0.15s;
-    text-decoration: none;
   }
-
   .btn:hover { background: var(--accent); border-color: var(--accent); }
   .btn.secondary { background: transparent; color: var(--ink); }
   .btn.secondary:hover { background: var(--ink); color: var(--paper); }
 
-  .actions {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-  }
+  .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 
-  /* Debug raw text */
-  details {
-    margin-top: 2rem;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
+  details { margin-top: 2rem; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  summary { padding: 0.6rem 1rem; cursor: pointer; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--cream); user-select: none; }
+  details pre { padding: 1rem; font-size: 0.7rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto; background: #fff; }
 
-  summary {
-    padding: 0.6rem 1rem;
-    cursor: pointer;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    background: var(--cream);
-    user-select: none;
-  }
-
-  details pre {
-    padding: 1rem;
-    font-size: 0.7rem;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-    max-height: 300px;
-    overflow-y: auto;
-    background: #fff;
-  }
-
-  footer {
-    margin-top: 3rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    text-align: center;
-  }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-align: center; }
 </style>
 </head>
 <body>
 
 <div class="masthead">
-  <h1>Year 12<br><em>Report Analyser</em></h1>
-  <p class="tagline">Upload · Parse · Rank<br>All processing happens in your browser</p>
+  <h1>Report<br><em>Analyser</em></h1>
+  <p class="tagline">Upload · Parse · Rank<br>All processing in your browser</p>
+</div>
+
+<div class="settings">
+  <label for="yearSelect">Year Group</label>
+  <select id="yearSelect">
+    <option value="7">Year 7</option>
+    <option value="8">Year 8</option>
+    <option value="9">Year 9</option>
+    <option value="10">Year 10</option>
+    <option value="11">Year 11</option>
+    <option value="12" selected>Year 12</option>
+  </select>
+
+  <label for="rankKey">Rank search key</label>
+  <input type="text" id="rankKey" value="Overall Assessment Rank" placeholder="e.g. Overall Assessment Rank" />
 </div>
 
 <div class="upload-zone" id="uploadZone">
@@ -386,15 +313,13 @@
   </details>
 </div>
 
-<footer>Year 12 Report Analyser &mdash; Client-side only &mdash; PDF.js &mdash; No data transmitted</footer>
+<footer>Report Analyser &mdash; Client-side only &mdash; PDF.js &mdash; No data transmitted</footer>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// ─── State ───────────────────────────────────────────────────────────────────
-let parsedData = null; // { students: [{name, subjects:[{name,rank,total}]}] }
+let parsedData = null;
 
-// ─── Upload handling ─────────────────────────────────────────────────────────
 const zone = document.getElementById('uploadZone');
 const fileInput = document.getElementById('fileInput');
 
@@ -407,9 +332,7 @@ zone.addEventListener('drop', e => {
   if (file && file.type === 'application/pdf') handleFile(file);
   else setStatus('Please drop a PDF file.', 'error');
 });
-fileInput.addEventListener('change', e => {
-  if (e.target.files[0]) handleFile(e.target.files[0]);
-});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
 
 function setStatus(msg, type = '') {
   const el = document.getElementById('status');
@@ -425,7 +348,6 @@ function setProgress(pct) {
   fill.style.width = pct + '%';
 }
 
-// ─── PDF extraction ───────────────────────────────────────────────────────────
 async function handleFile(file) {
   setStatus('Loading PDF…');
   setProgress(5);
@@ -439,7 +361,6 @@ async function handleFile(file) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
 
-    // Sort items by Y then X so reading order is correct
     const items = content.items.slice().sort((a, b) => {
       const dy = b.transform[5] - a.transform[5];
       return Math.abs(dy) > 3 ? dy : a.transform[4] - b.transform[4];
@@ -467,7 +388,9 @@ async function handleFile(file) {
   setProgress(70);
   setStatus('Parsing student data…');
 
-  parsedData = parseText(fullText);
+  const year = document.getElementById('yearSelect').value;
+  const rankKey = document.getElementById('rankKey').value.trim() || 'Overall Assessment Rank';
+  parsedData = parseText(fullText, year, rankKey);
   setProgress(90);
 
   if (!parsedData.students.length) {
@@ -484,20 +407,20 @@ async function handleFile(file) {
   document.getElementById('uploadZone').style.display = 'none';
 }
 
-// ─── Parser ───────────────────────────────────────────────────────────────────
-function parseText(text) {
+function parseText(text, year, rankKey) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
   // "SMITH, John Semester 2, 2025 - 12-1 - 12"
-  // Name is everything before " Semester"
   const studentRe = /^([A-Z][A-Z'\-]+(?:\s+[A-Z][A-Z'\-]+)*,\s+[A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]*)*)\s+Semester\b/;
 
-  // Subject name: everything before the class code e.g. 12MXX1, 12ENA2
-  // Handles both "Subject - HSC 12XYZ" and "Subject 12XYZ" formats
-  const subjectRe = /^(.+?)(?:\s+-\s+(?:HSC|Preliminary)?)?\s+12[A-Z]{2,}[\dA-Z]*/;
+  // Subject: everything before a class code that starts with the selected year number
+  // e.g. Year 12 → matches "12MXX1", Year 7 → matches "7ENG1"
+  const escapedYear = year.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const subjectRe = new RegExp(`^(.+?)(?:\\s+-\\s+(?:HSC|Preliminary)?)?\\s+${escapedYear}[A-Z]{2,}[\\dA-Z]*`);
 
-  // "Overall Assessment Rank: 17/61 ..."
-  const rankRe = /Overall\s+Assessment\s+Rank[:\s]+(\d+)\s*\/\s*(\d+)/i;
+  // Rank line using user-supplied key
+  const escapedKey = rankKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rankRe = new RegExp(`${escapedKey}[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`, 'i');
 
   const students = [];
   let curStudent = null;
@@ -507,7 +430,7 @@ function parseText(text) {
     const line = lines[i];
     if (line.includes('--- PAGE BREAK ---')) continue;
 
-    // ── New student? ──
+    // New student
     const studentMatch = line.match(studentRe);
     if (studentMatch) {
       curStudent = { name: studentMatch[1].trim(), subjects: [] };
@@ -518,7 +441,7 @@ function parseText(text) {
 
     if (!curStudent) continue;
 
-    // ── Rank line ──
+    // Rank line
     const rankMatch = line.match(rankRe);
     if (rankMatch) {
       const rank = parseInt(rankMatch[1]);
@@ -530,8 +453,7 @@ function parseText(text) {
       continue;
     }
 
-    // ── Subject line ──
-    // Matches "Subject Name - HSC 12XYZ ..." or "Subject Name - 12XYZ ..."
+    // Subject line
     const subMatch = line.match(subjectRe);
     if (subMatch) {
       pendingSubject = subMatch[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/, '').trim();
@@ -539,7 +461,6 @@ function parseText(text) {
     }
   }
 
-  // Collect all unique subjects
   const subjectSet = new Set();
   students.forEach(s => s.subjects.forEach(sub => subjectSet.add(sub.name)));
   const allSubjects = [...subjectSet].sort();
@@ -547,28 +468,27 @@ function parseText(text) {
   return { students, allSubjects };
 }
 
-// ─── Render ───────────────────────────────────────────────────────────────────
 function renderTables({ students, allSubjects }) {
-  // ── Table 1: ranks per student ──
+  // Table 1
   const rankTable = document.getElementById('rankTable');
   document.getElementById('rankCount').textContent = `${students.length} students · ${allSubjects.length} subjects`;
 
-  let html = '<thead><tr><th>Student</th>';
-  allSubjects.forEach(s => { html += `<th class="rank-col">${s}</th>`; });
+  let html = '<thead><tr><th>Student</th><th class="center">Subjects</th>';
+  allSubjects.forEach(s => { html += `<th class="center">${s}</th>`; });
   html += '</tr></thead><tbody>';
 
   students.forEach(student => {
     const subMap = {};
     student.subjects.forEach(s => { subMap[s.name] = s; });
-    html += `<tr><td class="name">${student.name}</td>`;
+    html += `<tr><td class="name">${student.name}</td><td class="center">${student.subjects.length}</td>`;
     allSubjects.forEach(subj => {
       const s = subMap[subj];
       if (!s) {
-        html += `<td class="rank-cell"><span class="pill missing">—</span></td>`;
+        html += `<td class="center"><span class="pill missing">—</span></td>`;
       } else {
         const pct = s.rank / s.total;
         const cls = pct <= 0.25 ? 'top' : pct >= 0.75 ? 'bottom' : '';
-        html += `<td class="rank-cell"><span class="pill ${cls}">${s.rank}/${s.total}</span></td>`;
+        html += `<td class="center"><span class="pill ${cls}">${s.rank}/${s.total}</span></td>`;
       }
     });
     html += '</tr>';
@@ -576,27 +496,23 @@ function renderTables({ students, allSubjects }) {
   html += '</tbody>';
   rankTable.innerHTML = html;
 
-  // ── Table 2: leaderboard ──
+  // Table 2
   const leaderTable = document.getElementById('leaderTable');
 
-  // Compute averages
   const withStats = students.map(student => {
     const subs = student.subjects;
-    if (!subs.length) return { ...student, avg: null, avgFraction: null };
-    const avgRank = subs.reduce((acc, s) => acc + s.rank, 0) / subs.length;
-    const avgPct = subs.reduce((acc, s) => acc + s.rank / s.total, 0) / subs.length * 100;
-    const avgFraction = `${avgRank.toFixed(1)} / ${(subs.reduce((a, s) => a + s.total, 0) / subs.length).toFixed(0)}`;
-    return { ...student, avg: avgRank, avgFraction, avgPct };
+    const avg = subs.length ? subs.reduce((acc, s) => acc + s.rank, 0) / subs.length : null;
+    return { ...student, avg };
   }).sort((a, b) => (a.avg ?? Infinity) - (b.avg ?? Infinity));
 
-  document.getElementById('boardCount').textContent = `Sorted by lowest average rank`;
+  document.getElementById('boardCount').textContent = 'Sorted by lowest average rank';
 
   let html2 = `<thead><tr>
-    <th>Position</th>
+    <th class="center">Position</th>
     <th>Student</th>
-    <th class="rank-col">Avg Rank</th>
-    <th class="rank-col">Avg (out of total)</th>`;
-  allSubjects.forEach(s => { html2 += `<th class="rank-col">${s}</th>`; });
+    <th class="center">Subjects</th>
+    <th class="center">Avg Rank</th>`;
+  allSubjects.forEach(s => { html2 += `<th class="center">${s}</th>`; });
   html2 += '</tr></thead><tbody>';
 
   withStats.forEach((student, idx) => {
@@ -608,19 +524,19 @@ function renderTables({ students, allSubjects }) {
     student.subjects.forEach(s => { subMap[s.name] = s; });
 
     html2 += `<tr class="${rowClass}">
-      <td style="text-align:center"><span class="position-badge ${posClass}">${medal || pos}</span></td>
+      <td class="center"><span class="position-badge ${posClass}">${medal || pos}</span></td>
       <td class="name">${student.name}</td>
-      <td class="avg" style="text-align:center">${student.avg ? student.avg.toFixed(2) : '—'}</td>
-      <td class="avg" style="text-align:center">${student.avgFraction || '—'}</td>`;
+      <td class="center">${student.subjects.length}</td>
+      <td class="center" style="font-weight:500">${student.avg ? student.avg.toFixed(2) : '—'}</td>`;
 
     allSubjects.forEach(subj => {
       const s = subMap[subj];
       if (!s) {
-        html2 += `<td class="rank-cell"><span class="pill missing">—</span></td>`;
+        html2 += `<td class="center"><span class="pill missing">—</span></td>`;
       } else {
         const pct = s.rank / s.total;
         const cls = pct <= 0.25 ? 'top' : pct >= 0.75 ? 'bottom' : '';
-        html2 += `<td class="rank-cell"><span class="pill ${cls}">${s.rank}/${s.total}</span></td>`;
+        html2 += `<td class="center"><span class="pill ${cls}">${s.rank}/${s.total}</span></td>`;
       }
     });
     html2 += '</tr>';
@@ -629,48 +545,41 @@ function renderTables({ students, allSubjects }) {
   leaderTable.innerHTML = html2;
 }
 
-// ─── CSV Export ───────────────────────────────────────────────────────────────
 function exportCSV(which) {
   if (!parsedData) return;
   const { students, allSubjects } = parsedData;
-
+  const year = document.getElementById('yearSelect').value;
   let rows = [];
+
   if (which === 'ranks') {
-    const header = ['Student', ...allSubjects];
-    rows.push(header);
+    rows.push(['Student', 'Subjects Found', ...allSubjects]);
     students.forEach(student => {
       const subMap = {};
       student.subjects.forEach(s => { subMap[s.name] = s; });
-      const row = [student.name, ...allSubjects.map(subj => {
-        const s = subMap[subj];
-        return s ? `${s.rank}/${s.total}` : '';
-      })];
-      rows.push(row);
+      rows.push([
+        student.name,
+        student.subjects.length,
+        ...allSubjects.map(subj => { const s = subMap[subj]; return s ? `${s.rank}/${s.total}` : ''; })
+      ]);
     });
   } else {
     const withStats = students.map(student => {
       const subs = student.subjects;
-      const avgRank = subs.length ? subs.reduce((a, s) => a + s.rank, 0) / subs.length : null;
-      const avgTotal = subs.length ? subs.reduce((a, s) => a + s.total, 0) / subs.length : null;
-      return { ...student, avgRank, avgTotal };
-    }).sort((a, b) => (a.avgRank ?? Infinity) - (b.avgRank ?? Infinity));
+      const avg = subs.length ? subs.reduce((a, s) => a + s.rank, 0) / subs.length : null;
+      return { ...student, avg };
+    }).sort((a, b) => (a.avg ?? Infinity) - (b.avg ?? Infinity));
 
-    const header = ['Position', 'Student', 'Avg Rank', 'Avg Out Of', ...allSubjects];
-    rows.push(header);
+    rows.push(['Position', 'Student', 'Subjects Found', 'Avg Rank', ...allSubjects]);
     withStats.forEach((student, idx) => {
       const subMap = {};
       student.subjects.forEach(s => { subMap[s.name] = s; });
-      const row = [
+      rows.push([
         idx + 1,
         student.name,
-        student.avgRank ? student.avgRank.toFixed(2) : '',
-        student.avgTotal ? student.avgTotal.toFixed(0) : '',
-        ...allSubjects.map(subj => {
-          const s = subMap[subj];
-          return s ? `${s.rank}/${s.total}` : '';
-        })
-      ];
-      rows.push(row);
+        student.subjects.length,
+        student.avg ? student.avg.toFixed(2) : '',
+        ...allSubjects.map(subj => { const s = subMap[subj]; return s ? `${s.rank}/${s.total}` : ''; })
+      ]);
     });
   }
 
@@ -678,11 +587,12 @@ function exportCSV(which) {
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `year12-${which}.csv`; a.click();
+  a.href = url;
+  a.download = `year${year}-${which}.csv`;
+  a.click();
   URL.revokeObjectURL(url);
 }
 
-// ─── Reset ────────────────────────────────────────────────────────────────────
 function resetTool() {
   parsedData = null;
   document.getElementById('results').classList.remove('visible');
