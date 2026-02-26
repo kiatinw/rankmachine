@@ -487,28 +487,15 @@ function computeZScores(students,allSubjects){
 }
 
 // ── Get resolved subject name (handles maths grouping) ────────────────────────
-function resolvedSubjectName(subjectName, studentMathsCode) {
-  if (!parsedData) return subjectName;
-
-  // ── Maths grouping (Years 7-10) ──
-  if (isYr710() && parsedData.mathsCodes.length) {
-    if (/math/i.test(subjectName) || /mma/i.test(subjectName)) {
-      if (!studentMathsCode) return subjectName;
+function resolvedSubjectName(subjectName, studentMathsCode){
+  // Maths grouping
+  if (isYr710() && parsedData && parsedData.mathsCodes.length && /math/i.test(subjectName)){
+    if(studentMathsCode){
       const grp = mathsGroups.find(g => g.codes.includes(studentMathsCode));
-      if (grp) return 'Maths: ' + grp.name;
-      return 'Maths: Unassigned (' + studentMathsCode + ')';
+      return grp ? 'Maths: ' + grp.name : 'Maths: Unassigned ('+studentMathsCode+')';
     }
+    return subjectName;
   }
-
-  // ── G&T subjects detection ──
-  if (subjectName.match(/T$|X$|TR$|TG$/i)) {
-    // Merge by base subject, e.g., "10SSCTG" -> "Science G&T"
-    const base = subjectName.replace(/T$|X$|TR$|TG$/i, '');
-    return base + ' G&T';
-  }
-
-  return subjectName;
-}
 
   // G&T subjects
   if(parsedData && parsedData.scoreMode==='percent'){
@@ -524,39 +511,22 @@ function resolvedSubjectName(subjectName, studentMathsCode) {
 }
 
 // ── Effective subjects list (with maths groups collapsed) ──────────────────────
-function getEffectiveSubjects(workingStudents) {
-  if (!parsedData) return [];
-
-  const set = new Set();
-
-  workingStudents.forEach(st => {
-    st.subjects.forEach(s => {
-      const name = resolvedSubjectName(s.name, st.mathsCode);
-      set.add(name);
+function getEffectiveSubjects(workingStudents){
+  if(!isYr710()||!parsedData||!parsedData.mathsCodes.length)return parsedData.allSubjects;
+  const set=new Set();
+  workingStudents.forEach(st=>{
+    st.subjects.forEach(s=>{
+      set.add(resolvedSubjectName(s.name,st.mathsCode));
     });
   });
-
   return [...set].sort();
 }
 
 // ── Compute avg ────────────────────────────────────────────────────────────────
-function computeAvg(student, isPercent) {
-  const subs = student.subjects;
-  if (!subs.length) return null;
-
-  if (isPercent) {
-    let ws = 0, wt = 0;
-    subs.forEach(s => {
-      const rn = resolvedSubjectName(s.name, student.mathsCode);
-      const w = subjectWeights[rn] ?? subjectWeights[s.name] ?? 1.0;
-      ws += s.z * w;
-      wt += w;
-    });
-    return wt > 0 ? ws / wt : null;
-  }
-
-  // Rank mode fallback
-  return subs.reduce((a, s) => a + s.rank, 0) / subs.length;
+function computeAvg(student,isPercent){
+  const subs=student.subjects;if(!subs.length)return null;
+  if(isPercent){let ws=0,wt=0;subs.forEach(s=>{const rn=resolvedSubjectName(s.name,student.mathsCode);const w=subjectWeights[rn]??subjectWeights[s.name]??1.0;ws+=s.z*w;wt+=w});return wt>0?ws/wt:null}
+  return subs.reduce((a,s)=>a+s.rank,0)/subs.length;
 }
 
 // ── Build penalty panel ────────────────────────────────────────────────────────
@@ -688,60 +658,14 @@ function renderMathsGroups(){
   container.innerHTML=html;
 }
 
-function chipHTML(code, groupId) {
+function chipHTML(code, groupId){
   return `<div class="maths-class-chip" draggable="true" id="chip_${code}" 
               ondragstart="chipDragStart(event,'${code}',${JSON.stringify(groupId)})">
             ${escHTML(code)}
             <button class="chip-remove" 
-                    onclick="event.stopPropagation(); moveChipTo('${code}','unassigned')"
+                    onclick="event.stopPropagation(); moveChipTo('${code}','unassigned')" 
                     title="Move to unassigned">✕</button>
           </div>`;
-}
-
-  let dragChip = null;
-
-function chipDragStart(e, code, fromGroupId) {
-  dragChip = { code, fromGroupId };
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', code);
-}
-
-function dzOver(e) {
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-}
-
-function dzLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
-}
-
-function dzDrop(e, targetGroupId) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  if (!dragChip) return;
-  moveChipTo(dragChip.code, targetGroupId);
-  dragChip = null;
-}
-
-function moveChipTo(code, targetGroupId) {
-  // Remove from old location
-  if (dragChip.fromGroupId === 'unassigned' || dragChip.fromGroupId === undefined) {
-    mathsUnassigned = mathsUnassigned.filter(c => c !== code);
-  } else {
-    const g = mathsGroups.find(g => g.id === dragChip.fromGroupId);
-    if (g) g.codes = g.codes.filter(c => c !== code);
-  }
-
-  // Add to new location
-  if (targetGroupId === 'unassigned') {
-    mathsUnassigned.push(code);
-  } else {
-    const g = mathsGroups.find(g => g.id === targetGroupId);
-    if (g) g.codes.push(code);
-  }
-
-  renderMathsGroups();
-  renderTables(); // refresh table subjects to reflect new grouping
 }
 
 function chipDragStart(e, code, fromGroupId){
