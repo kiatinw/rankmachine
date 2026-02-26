@@ -87,8 +87,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .maths-class-chip.dragging{opacity:.4;cursor:grabbing}
 .maths-class-chip .chip-x{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.65rem;line-height:1;padding:0 .1rem;margin-left:auto;flex-shrink:0}
 .maths-class-chip .chip-x:hover{color:var(--accent)}
-.maths-unassigned{background:var(--paper);border:1px solid var(--border);border-radius:4px;min-width:160px;flex:1;max-width:220px}
-.maths-unassigned-header{padding:.5rem .6rem;border-bottom:1px solid var(--border);background:#fde8e3;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+
 
 /* Upload */
 .upload-zone{border:2px dashed var(--border);background:var(--cream);border-radius:4px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;margin-bottom:1.5rem}
@@ -373,8 +372,9 @@ async function handleFile(file){
 
   mathsGroups=[];mathsUnassigned=[];
   if(isJunior()&&parsedData.mathsCodes.size){
-    mathsUnassigned=[...parsedData.mathsCodes].sort();
-    mathsGroups=[{id:++groupIdSeq,name:'Group 1',codes:[]},{id:++groupIdSeq,name:'Group 2',codes:[]},{id:++groupIdSeq,name:'Group 3',codes:[]}];
+    mathsUnassigned=[];
+    const allMathsCodes=[...parsedData.mathsCodes].sort();
+    mathsGroups=[{id:++groupIdSeq,name:'Group 1',codes:allMathsCodes},{id:++groupIdSeq,name:'Group 2',codes:[]},{id:++groupIdSeq,name:'Group 3',codes:[]}];
   }
 
   subjectsVisible[1]=false;subjectsVisible[2]=false;
@@ -399,14 +399,35 @@ function parseText(text,year,rankKeys,scoreMode){
   const ey=year.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   const subjectCodeRe=new RegExp(`^(.*?)\\s+(${ey}[A-Z]{2,}[\\dA-Z]*)(?:\\s|$)`);
 
-  // One regex per key; first match on a line wins
-  function makeRe(key,pattern){
-    const ek=key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    return new RegExp(`${ek}${pattern}`,'i');
+  // Value patterns used after the key is located by findValue/matchAny
+  const rankPat=/^[:\s]+(\d+)\s*\/\s*(\d+)/i;
+  const pctPat =/^[:\s]+(\d+(?:\.\d+)?)\s*%/i;
+  // Find the key in the line, but only accept it if the token immediately before it
+  // (skipping spaces) is NOT an alphabetic word — so "Median Assessment Mark" is
+  // ignored when the key is "Assessment Mark", regardless of order on the line.
+  function findValue(line,key,valuePat){
+    const kl=key.toLowerCase(),ll=line.toLowerCase();
+    let start=0;
+    while(true){
+      const pos=ll.indexOf(kl,start);
+      if(pos===-1)break;
+      // Walk back past spaces to find preceding non-space char
+      let look=pos-1;
+      while(look>=0&&line[look]===' ')look--;
+      // If preceding non-space char is alphabetic this is a qualifier prefix — skip
+      if(look>=0&&/[A-Za-z]/.test(line[look])){start=pos+1;continue}
+      // Try to match the value pattern immediately after the key
+      const segment=line.slice(pos+key.length);
+      const m=segment.match(valuePat);
+      if(m)return m;
+      start=pos+1;
+    }
+    return null;
   }
-  const rankRes=rankKeys.map(k=>makeRe(k,`[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`));
-  const pctRes =rankKeys.map(k=>makeRe(k,`[:\\s]+(\\d+(?:\\.\\d+)?)\\s*%`));
-  function matchAny(res,line){for(const re of res){const m=line.match(re);if(m)return m;}return null;}
+  function matchAny(keys,valuePat,line){
+    for(const key of keys){const m=findValue(line,key,valuePat);if(m)return m;}
+    return null;
+  }
 
   // G&T: class code ends with T, X, TR, or TG (before optional trailing digits)
   // Only relevant for years 7-10
@@ -429,7 +450,7 @@ function parseText(text,year,rankKeys,scoreMode){
     if(!cur)continue;
 
     if(scoreMode==='percent'){
-      const pm=matchAny(pctRes,line);
+      const pm=matchAny(rankKeys,pctPat,line);
       if(pm&&pendName){
         const isGT=juniorYear&&pendCode?gtCodeRe.test(pendCode):false;
         const effName=isGT?pendName+' (G&T)':pendName;
@@ -439,7 +460,7 @@ function parseText(text,year,rankKeys,scoreMode){
         pendName=null;pendCode=null;continue;
       }
     } else {
-      const rm=matchAny(rankRes,line);
+      const rm=matchAny(rankKeys,rankPat,line);
       if(rm&&pendName){
         const isGT=juniorYear&&pendCode?gtCodeRe.test(pendCode):false;
         const effName=isGT?pendName+' (G&T)':pendName;
@@ -656,11 +677,7 @@ function doApplyAllGT(){
 function renderMathsGroups(){
   const c=document.getElementById('mathsGroupsContainer');if(!c)return;
   let html='';
-  // Unassigned
-  html+=`<div class="maths-unassigned">
-    <div class="maths-unassigned-header">Unassigned</div>
-    <div class="maths-drop-zone" id="dz__unassigned">${mathsUnassigned.map(code=>chipHTML(code)).join('')}</div>
-  </div>`;
+
   // Groups
   mathsGroups.forEach(g=>{
     html+=`<div class="maths-group-col">
@@ -676,7 +693,7 @@ function renderMathsGroups(){
 }
 
 function chipHTML(code){
-  return`<div class="maths-class-chip" id="chip__${eA(code)}" draggable="true" data-code="${eA(code)}">${eH(code)}<button class="chip-x" data-code="${eA(code)}" title="Move to unassigned">✕</button></div>`;
+  return`<div class="maths-class-chip" id="chip__${eA(code)}" draggable="true" data-code="${eA(code)}">${eH(code)}</div>`;
 }
 
 function attachDragListeners(){
@@ -716,7 +733,7 @@ function moveCode(code,targetZoneId){
   mathsUnassigned=mathsUnassigned.filter(c=>c!==code);
   mathsGroups.forEach(g=>{g.codes=g.codes.filter(c=>c!==code)});
   if(targetZoneId==='__unassigned'||targetZoneId==='dz__unassigned'){
-    mathsUnassigned.push(code);
+    mathsUnassigned.push(code); // fallback, pool hidden but kept for safety
   } else {
     // Extract group id from zone id "dz__<id>"
     const idStr=targetZoneId.replace('dz__','');
@@ -734,7 +751,11 @@ function addMathsGroup(){
 }
 function removeGroup(id){
   const g=mathsGroups.find(x=>x.id===id);
-  if(g){g.codes.forEach(c=>mathsUnassigned.push(c));mathsGroups=mathsGroups.filter(x=>x.id!==id)}
+  if(g){
+    mathsGroups=mathsGroups.filter(x=>x.id!==id);
+    if(mathsGroups.length&&g.codes.length)mathsGroups[0].codes.push(...g.codes);
+    else g.codes.forEach(c=>mathsUnassigned.push(c));
+  }
   renderMathsGroups();
 }
 function renameGroup(id,name){
