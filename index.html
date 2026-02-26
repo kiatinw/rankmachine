@@ -19,203 +19,123 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    font-family: 'DM Mono', monospace;
-    background: var(--paper);
-    color: var(--ink);
-    min-height: 100vh;
-    padding: 2rem;
-  }
+  body { font-family: 'DM Mono', monospace; background: var(--paper); color: var(--ink); min-height: 100vh; padding: 2rem; }
 
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999; opacity: 0.5;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 999;
-    opacity: 0.5;
   }
 
   /* ── Masthead ── */
-  .masthead {
-    border-bottom: 2px solid var(--ink);
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 1.5rem;
-    flex-wrap: wrap;
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1rem; margin-bottom: 2rem; }
+  .masthead h1 { font-family: 'DM Serif Display', serif; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1; letter-spacing: -0.02em; }
+  .masthead h1 em { font-style: italic; color: var(--accent); }
+  .masthead .tagline { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 0.3rem; }
+
+  /* ── Collapsible panels (instructions, penalty) ── */
+  .panel {
+    background: var(--cream); border: 1px solid var(--border); border-radius: 4px;
+    margin-bottom: 1.5rem; overflow: hidden;
   }
-
-  .masthead-text h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    line-height: 1;
-    letter-spacing: -0.02em;
+  .panel-header {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem;
+    cursor: pointer; user-select: none;
   }
+  .panel-header h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; flex: 1; }
+  .panel-arrow { font-size: 0.55rem; color: var(--muted); transition: transform 0.2s; }
+  .panel-header.open .panel-arrow { transform: rotate(90deg); }
+  .panel-body { padding: 0 1.25rem 1.25rem; display: none; }
+  .panel-body.open { display: block; }
 
-  .masthead-text h1 em { font-style: italic; color: var(--accent); }
-
-  .masthead-text .tagline {
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-top: 0.3rem;
-  }
-
-  /* ── Instructions ── */
-  .instructions {
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 1.1rem 1.5rem;
-    margin-bottom: 1.5rem;
-    font-size: 0.75rem;
-    line-height: 1.8;
-    color: var(--ink);
-  }
-
-  .instructions strong {
-    font-weight: 500;
-    letter-spacing: 0.05em;
-  }
-
-  .instructions .step {
-    display: flex;
-    gap: 0.75rem;
-    margin-bottom: 0.2rem;
-    align-items: baseline;
-  }
-
-  .instructions .step-num {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1rem;
-    color: var(--accent);
-    flex-shrink: 0;
-    width: 1rem;
-  }
-
-  .instructions summary {
-    cursor: pointer;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    user-select: none;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .instructions summary::before {
-    content: '▶';
-    font-size: 0.5rem;
-    transition: transform 0.2s;
-  }
-
-  .instructions[open] summary::before { transform: rotate(90deg); }
-
-  .instructions .steps-body { margin-top: 0.75rem; }
+  /* Instructions */
+  .step { display: flex; gap: 0.75rem; margin-bottom: 0.3rem; align-items: baseline; font-size: 0.75rem; line-height: 1.7; }
+  .step-num { font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--accent); flex-shrink: 0; width: 1rem; }
 
   /* ── Settings ── */
-  .settings {
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .settings-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.9rem 1.5rem;
-    align-items: start;
-  }
-
+  .settings { background: var(--cream); border: 1px solid var(--border); border-radius: 4px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  .settings-grid { display: grid; grid-template-columns: auto 1fr; gap: 0.9rem 1.5rem; align-items: start; }
   .setting-label-group { display: flex; flex-direction: column; gap: 0.2rem; padding-top: 0.45rem; }
-
-  .setting-label-group label {
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink);
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .setting-label-group .hint {
-    font-size: 0.65rem;
-    color: var(--muted);
-    line-height: 1.4;
-    max-width: 30ch;
-  }
-
+  .setting-label-group label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); font-weight: 500; white-space: nowrap; }
+  .setting-label-group .hint { font-size: 0.65rem; color: var(--muted); line-height: 1.4; max-width: 34ch; }
   .setting-control { display: flex; flex-direction: column; gap: 0.2rem; }
-
-  .settings input[type="text"],
-  .settings select {
-    font-family: 'DM Mono', monospace;
-    font-size: 0.8rem;
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    padding: 0.4rem 0.6rem;
-    color: var(--ink);
-    width: 100%;
-    max-width: 380px;
+  .settings input[type="text"], .settings select {
+    font-family: 'DM Mono', monospace; font-size: 0.8rem; background: var(--paper);
+    border: 1px solid var(--border); border-radius: 2px; padding: 0.4rem 0.6rem;
+    color: var(--ink); width: 100%; max-width: 380px;
   }
+  .settings input[type="text"]:focus, .settings select:focus { outline: none; border-color: var(--accent); }
 
-  .settings input[type="text"]:focus,
-  .settings select:focus {
-    outline: none;
-    border-color: var(--accent);
+  /* ── Penalty panel ── */
+  .penalty-controls {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;
+    padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);
   }
+  .penalty-mode-label { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .seg-control { display: flex; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+  .seg-control button {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 0.3rem 0.8rem; background: var(--paper); border: none; cursor: pointer; color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+  }
+  .seg-control button.active { background: var(--ink); color: var(--paper); }
+  .seg-control button:not(:last-child) { border-right: 1px solid var(--border); }
+
+  .category-legend { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; font-size: 0.68rem; }
+  .cat-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem;
+    border-radius: 2px; border: 1px solid var(--border); cursor: default;
+  }
+  .cat-badge.easy  { background: #e8f4e8; border-color: #a8d0a8; color: #2a5a2a; }
+  .cat-badge.normal { background: var(--cream); }
+  .cat-badge.hard  { background: #e8eef8; border-color: #a8b8d8; color: #1a2a5a; }
+
+  .penalty-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.5rem;
+  }
+  .penalty-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.4rem 0.6rem; background: var(--paper);
+    border: 1px solid var(--border); border-radius: 3px;
+  }
+  .penalty-subject-name { flex: 1; font-size: 0.72rem; line-height: 1.3; }
+  .penalty-row input[type="number"] {
+    font-family: 'DM Mono', monospace; font-size: 0.75rem; width: 5rem;
+    background: var(--cream); border: 1px solid var(--border); border-radius: 2px;
+    padding: 0.25rem 0.4rem; color: var(--ink); text-align: right;
+  }
+  .penalty-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
+  .cat-select {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    background: var(--cream); border: 1px solid var(--border); border-radius: 2px;
+    padding: 0.25rem 0.3rem; color: var(--ink); cursor: pointer;
+  }
+  .cat-select:focus { outline: none; border-color: var(--accent); }
+  .penalty-apply-btn {
+    margin-top: 1rem; font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 0.45rem 1rem;
+    background: var(--ink); color: var(--paper); border: none; border-radius: 2px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .penalty-apply-btn:hover { background: var(--accent); }
 
   /* ── Upload ── */
   .upload-zone {
-    border: 2px dashed var(--border);
-    background: var(--cream);
-    border-radius: 4px;
-    padding: 3rem 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    position: relative;
-    margin-bottom: 1.5rem;
+    border: 2px dashed var(--border); background: var(--cream); border-radius: 4px;
+    padding: 3rem 2rem; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; position: relative; margin-bottom: 1.5rem;
   }
-
   .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: #f0e8d8; }
-
-  .upload-zone input {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-  }
-
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
   .upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
-
-  .upload-zone h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.4rem;
-    margin-bottom: 0.4rem;
-  }
-
+  .upload-zone h2 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 0.4rem; }
   .upload-zone p { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.05em; }
 
   /* ── Status / progress ── */
-  #status {
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-bottom: 1.5rem;
-    min-height: 1.2em;
-    text-transform: uppercase;
-  }
+  #status { font-size: 0.75rem; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 1.5rem; min-height: 1.2em; text-transform: uppercase; }
   #status.error { color: var(--accent); }
   #status.success { color: #2a7a3b; }
-
   .progress-bar { height: 2px; background: var(--cream); border-radius: 2px; overflow: hidden; margin-bottom: 2rem; display: none; }
   .progress-bar.visible { display: block; }
   .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
@@ -224,168 +144,66 @@
   .results { display: none; }
   .results.visible { display: block; }
 
-  /* ── Collapsible section ── */
+  /* ── Collapsible table sections ── */
   .collapsible-section { margin-bottom: 1.5rem; }
-
   .collapsible-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background: var(--ink);
-    color: var(--paper);
-    border-radius: 4px 4px 0 0;
-    cursor: pointer;
-    user-select: none;
-    margin-top: 2rem;
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+    background: var(--ink); color: var(--paper); border-radius: 4px 4px 0 0;
+    cursor: pointer; user-select: none; margin-top: 2rem;
   }
-
   .collapsible-header.collapsed { border-radius: 4px; }
-
-  .collapsible-header h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.3rem;
-    flex: 1;
-  }
-
-  .collapsible-header .count {
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgba(245,240,232,0.55);
-  }
-
-  .collapse-toggle {
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgba(245,240,232,0.6);
-    border: 1px solid rgba(245,240,232,0.25);
-    border-radius: 2px;
-    padding: 0.2rem 0.5rem;
-    flex-shrink: 0;
-  }
-
+  .collapsible-header h2 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; flex: 1; }
+  .collapsible-header .count { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,240,232,0.55); }
+  .collapse-toggle { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,240,232,0.6); border: 1px solid rgba(245,240,232,0.25); border-radius: 2px; padding: 0.2rem 0.5rem; }
   .collapsible-body { display: block; }
   .collapsible-body.hidden { display: none; }
 
   /* ── Tables ── */
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-top: none; border-radius: 0 0 4px 4px; margin-bottom: 0; }
-
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-top: none; border-radius: 0 0 4px 4px; }
   table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-
   thead tr { background: #2e2b26; color: var(--paper); }
-
-  thead th {
-    padding: 0.55rem 0.9rem;
-    text-align: left;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    font-size: 0.62rem;
-    white-space: nowrap;
-  }
-
+  thead th { padding: 0.55rem 0.9rem; text-align: left; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.62rem; white-space: nowrap; }
   thead th.center { text-align: center; }
-
-  /* Hidden column styles */
-  .col-subjects-list { }
   .col-subjects-list.hide { display: none; }
-
   tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: var(--cream); }
   tbody tr.gold { background: #fdf6e0; }
   tbody tr.gold:hover { background: #f9efcd; }
-
   td { padding: 0.55rem 0.9rem; vertical-align: middle; }
   td.name { font-family: 'DM Serif Display', serif; font-size: 0.95rem; white-space: nowrap; }
   td.center { text-align: center; font-variant-numeric: tabular-nums; }
   td.subjects-list-cell { font-size: 0.68rem; color: var(--muted); max-width: 260px; line-height: 1.5; }
 
-  .pill {
-    display: inline-block;
-    padding: 0.15rem 0.5rem;
-    border-radius: 2px;
-    font-size: 0.72rem;
-    background: var(--cream);
-    border: 1px solid var(--border);
-    white-space: nowrap;
-  }
+  .pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.72rem; background: var(--cream); border: 1px solid var(--border); white-space: nowrap; }
   .pill.top    { background: #d8f0dd; border-color: #9ecba6; color: #1a5c24; }
   .pill.bottom { background: #fde8e3; border-color: #e8b0a2; color: #7a2010; }
   .pill.missing { color: var(--muted); background: transparent; border-color: transparent; font-style: italic; }
 
-  .position-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.8rem;
-    height: 1.8rem;
-    border-radius: 50%;
-    font-size: 0.7rem;
-    font-weight: 500;
-    background: var(--cream);
-    border: 1px solid var(--border);
-  }
+  .position-badge { display: inline-flex; align-items: center; justify-content: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; font-size: 0.7rem; font-weight: 500; background: var(--cream); border: 1px solid var(--border); }
   .position-badge.p1 { background: #f0d060; border-color: #c9a030; color: #5a3a00; }
   .position-badge.p2 { background: #d8d8d8; border-color: #aaa; color: #333; }
   .position-badge.p3 { background: #e8c498; border-color: #c09060; color: #5a3010; }
 
+  /* Tooltip for raw z-score */
+  .has-tip { position: relative; cursor: help; border-bottom: 1px dashed var(--muted); }
+  .has-tip:hover::after {
+    content: attr(data-tip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--paper); font-size: 0.65rem; padding: 0.3rem 0.6rem;
+    border-radius: 3px; white-space: nowrap; pointer-events: none; margin-bottom: 4px; z-index: 10;
+  }
+
   /* ── Table toolbar ── */
-  .table-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem 1rem;
-    background: #f0ece2;
-    border: 1px solid var(--border);
-    border-top: none;
-    font-size: 0.68rem;
-    flex-wrap: wrap;
-  }
-
-  .toggle-subjects-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.25rem 0.6rem;
-    border: 1px solid var(--border);
-    background: var(--paper);
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-
+  .table-toolbar { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 1rem; background: #f0ece2; border: 1px solid var(--border); border-top: none; flex-wrap: wrap; }
+  .toggle-subjects-btn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.6rem; border: 1px solid var(--border); background: var(--paper); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.15s, color 0.15s, border-color 0.15s; }
   .toggle-subjects-btn:hover { border-color: var(--ink); color: var(--ink); }
   .toggle-subjects-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
-  /* ── Action buttons ── */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.5rem 1.2rem;
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--paper);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: background 0.15s, color 0.15s;
-  }
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.2rem; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.15s, color 0.15s; }
   .btn:hover { background: var(--accent); border-color: var(--accent); }
   .btn.secondary { background: transparent; color: var(--ink); }
   .btn.secondary:hover { background: var(--ink); color: var(--paper); }
-
   .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 
   /* ── Debug ── */
@@ -399,23 +217,24 @@
 <body>
 
 <div class="masthead">
-  <div class="masthead-text">
-    <h1>Rank<em>Forge</em></h1>
-    <p class="tagline">Parse · Rank · Compare</p>
-  </div>
+  <h1>Rank<em>Forge</em></h1>
+  <p class="tagline">Parse · Rank · Compare</p>
 </div>
 
-<!-- ── How to get your PDF ── -->
-<details class="instructions">
-  <summary>How to generate the PDF from Sentral</summary>
-  <div class="steps-body">
+<!-- ── Instructions ── -->
+<div class="panel">
+  <div class="panel-header" onclick="togglePanel(this)">
+    <h3>How to generate the PDF from Sentral</h3>
+    <span class="panel-arrow">▶</span>
+  </div>
+  <div class="panel-body">
     <div class="step"><span class="step-num">1</span><span>Log in to Sentral and navigate to <strong>Academic Reports</strong>.</span></div>
     <div class="step"><span class="step-num">2</span><span>Select <strong>Summary Report</strong> from the report type options.</span></div>
     <div class="step"><span class="step-num">3</span><span>Set the year group to the cohort you want to analyse (e.g. Year 12).</span></div>
     <div class="step"><span class="step-num">4</span><span>Under grouping options, select <strong>Group by Student</strong>.</span></div>
     <div class="step"><span class="step-num">5</span><span>Generate and download the PDF, then upload it below.</span></div>
   </div>
-</details>
+</div>
 
 <!-- ── Settings ── -->
 <div class="settings">
@@ -438,18 +257,18 @@
 
     <div class="setting-label-group">
       <label for="scoreMode">Score mode</label>
-      <span class="hint">Choose whether your reports show a <strong>rank</strong> (e.g. 17/61) or a <strong>percentage mark</strong> (e.g. 87%). Years 11–12 typically use ranks; Years 7–10 typically use percentage marks. This also changes how the leaderboard is sorted.</span>
+      <span class="hint">Rank mode extracts X/Y ranks and sorts by lowest average. Percentage mode extracts % marks, converts them to z-scores (so performance is relative to cohort per subject), and sorts by highest weighted z-score.</span>
     </div>
     <div class="setting-control">
       <select id="scoreMode" onchange="onScoreModeChange()">
         <option value="rank">Rank (e.g. 17/61) — sort by lowest</option>
-        <option value="percent">Percentage mark (e.g. 87%) — sort by highest</option>
+        <option value="percent">Percentage mark (e.g. 87%) — z-score comparison</option>
       </select>
     </div>
 
     <div class="setting-label-group">
       <label for="rankKey" id="rankKeyLabel">Rank search key</label>
-      <span class="hint" id="rankKeyHint">The text that appears just before the score in the PDF. RankForge scans each line for this phrase and extracts the number that follows it. Change this if your reports use different wording.</span>
+      <span class="hint" id="rankKeyHint">The text that appears just before the score in the PDF. RankForge scans each line for this phrase and extracts the number that follows it.</span>
     </div>
     <div class="setting-control">
       <input type="text" id="rankKey" value="Overall Assessment Rank" placeholder="e.g. Overall Assessment Rank" />
@@ -478,10 +297,37 @@
     <button class="btn secondary" onclick="resetTool()">↺ Load another PDF</button>
   </div>
 
+  <!-- ── Penalty panel (hidden until percent mode + data loaded) ── -->
+  <div class="panel" id="penaltyPanel" style="display:none;">
+    <div class="panel-header" onclick="togglePanel(this)">
+      <h3>Subject Difficulty Weighting</h3>
+      <span class="panel-arrow">▶</span>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:1rem;line-height:1.6;">
+        Each subject's z-score contribution is multiplied by its weight before averaging. A weight above 1.0 rewards harder subjects; below 1.0 penalises easier ones. Changes take effect when you click <strong>Apply weights</strong>.
+      </p>
+      <div class="penalty-controls">
+        <span class="penalty-mode-label">Mode:</span>
+        <div class="seg-control">
+          <button id="modeBtnCategory" class="active" onclick="setPenaltyMode('category')">Easy / Normal / Hard</button>
+          <button id="modeBtnMultiplier" onclick="setPenaltyMode('multiplier')">Custom multiplier</button>
+        </div>
+        <div class="category-legend" id="categoryLegend">
+          <span class="cat-badge easy">Easy × 0.8</span>
+          <span class="cat-badge normal">Normal × 1.0</span>
+          <span class="cat-badge hard">Hard × 1.2</span>
+        </div>
+      </div>
+      <div class="penalty-grid" id="penaltyGrid"></div>
+      <button class="penalty-apply-btn" onclick="applyWeights()">Apply weights &amp; re-rank</button>
+    </div>
+  </div>
+
   <!-- Table 1 -->
   <div class="collapsible-section">
     <div class="collapsible-header" id="header1" onclick="toggleSection('body1','header1','toggle1')">
-      <h2>Subject Ranks by Student</h2>
+      <h2>Subject Scores by Student</h2>
       <span class="count" id="rankCount"></span>
       <span class="collapse-toggle" id="toggle1">collapse ▲</span>
     </div>
@@ -521,103 +367,89 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 let parsedData = null;
-// Track subject list column visibility per table
+let subjectWeights = {};      // subjectName -> multiplier (1.0 default)
+let penaltyMode = 'category'; // 'category' | 'multiplier'
 const subjectsVisible = { 1: false, 2: false };
+
+const CAT_MULTIPLIERS = { easy: 0.8, normal: 1.0, hard: 1.2 };
+
+// ─── Panel toggle ─────────────────────────────────────────────────────────────
+function togglePanel(headerEl) {
+  const body = headerEl.nextElementSibling;
+  const arrow = headerEl.querySelector('.panel-arrow');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  headerEl.classList.toggle('open', !isOpen);
+}
 
 // ─── Upload ───────────────────────────────────────────────────────────────────
 const zone = document.getElementById('uploadZone');
 const fileInput = document.getElementById('fileInput');
-
 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
 zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
 zone.addEventListener('drop', e => {
-  e.preventDefault();
-  zone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.type === 'application/pdf') handleFile(file);
+  e.preventDefault(); zone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') handleFile(f);
   else setStatus('Please drop a PDF file.', 'error');
 });
 fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
 
-function setStatus(msg, type = '') {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = type;
-}
-
+function setStatus(msg, type = '') { const el = document.getElementById('status'); el.textContent = msg; el.className = type; }
 function setProgress(pct) {
-  const bar = document.getElementById('progressBar');
-  const fill = document.getElementById('progressFill');
+  const bar = document.getElementById('progressBar'), fill = document.getElementById('progressFill');
   if (pct === null) { bar.classList.remove('visible'); return; }
-  bar.classList.add('visible');
-  fill.style.width = pct + '%';
+  bar.classList.add('visible'); fill.style.width = pct + '%';
 }
 
-// ─── Collapsible sections ─────────────────────────────────────────────────────
+// ─── Collapsible table sections ───────────────────────────────────────────────
 function toggleSection(bodyId, headerId, toggleId) {
-  const body = document.getElementById(bodyId);
-  const header = document.getElementById(headerId);
-  const toggle = document.getElementById(toggleId);
-  const isCollapsed = body.classList.contains('hidden');
+  const body = document.getElementById(bodyId), header = document.getElementById(headerId), toggle = document.getElementById(toggleId);
+  const collapsed = body.classList.contains('hidden');
   body.classList.toggle('hidden');
-  header.classList.toggle('collapsed', !isCollapsed);
-  toggle.textContent = isCollapsed ? 'collapse ▲' : 'expand ▼';
+  header.classList.toggle('collapsed', !collapsed);
+  toggle.textContent = collapsed ? 'collapse ▲' : 'expand ▼';
 }
 
-// ─── Subject list column toggle ───────────────────────────────────────────────
-function toggleSubjectsList(tableNum) {
-  subjectsVisible[tableNum] = !subjectsVisible[tableNum];
-  const visible = subjectsVisible[tableNum];
-  const btn = document.getElementById(`subjectsToggle${tableNum}`);
-  btn.textContent = visible ? '☰ Hide subject list column' : '☰ Show subject list column';
-  btn.classList.toggle('active', visible);
-  const tableId = tableNum === 1 ? 'rankTable' : 'leaderTable';
-  const table = document.getElementById(tableId);
-  table.querySelectorAll('.col-subjects-list').forEach(el => {
-    el.classList.toggle('hide', !visible);
-  });
+function toggleSubjectsList(n) {
+  subjectsVisible[n] = !subjectsVisible[n];
+  const v = subjectsVisible[n];
+  const btn = document.getElementById(`subjectsToggle${n}`);
+  btn.textContent = v ? '☰ Hide subject list column' : '☰ Show subject list column';
+  btn.classList.toggle('active', v);
+  const tableId = n === 1 ? 'rankTable' : 'leaderTable';
+  document.getElementById(tableId).querySelectorAll('.col-subjects-list').forEach(el => el.classList.toggle('hide', !v));
 }
 
 // ─── PDF extraction ───────────────────────────────────────────────────────────
 async function handleFile(file) {
-  setStatus('Loading PDF…');
-  setProgress(5);
-
+  setStatus('Loading PDF…'); setProgress(5);
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const totalPages = pdf.numPages;
-
   let fullText = '';
+
   for (let i = 1; i <= totalPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-
     const items = content.items.slice().sort((a, b) => {
       const dy = b.transform[5] - a.transform[5];
       return Math.abs(dy) > 3 ? dy : a.transform[4] - b.transform[4];
     });
-
-    const lines = [];
-    let lastY = null;
-    let line = [];
+    const lines = []; let lastY = null, line = [];
     for (const item of items) {
       const y = Math.round(item.transform[5]);
-      if (lastY !== null && Math.abs(y - lastY) > 3) {
-        if (line.length) lines.push(line.join(' '));
-        line = [];
-      }
+      if (lastY !== null && Math.abs(y - lastY) > 3) { if (line.length) lines.push(line.join(' ')); line = []; }
       if (item.str.trim()) line.push(item.str.trim());
       lastY = y;
     }
     if (line.length) lines.push(line.join(' '));
-
     fullText += lines.join('\n') + '\n--- PAGE BREAK ---\n';
     setProgress(5 + Math.round((i / totalPages) * 60));
   }
 
   document.getElementById('rawText').textContent = fullText;
-  setProgress(70);
-  setStatus('Parsing student data…');
+  setProgress(70); setStatus('Parsing student data…');
 
   const year = document.getElementById('yearSelect').value;
   const rankKey = document.getElementById('rankKey').value.trim() || 'Overall Assessment Rank';
@@ -628,17 +460,23 @@ async function handleFile(file) {
   if (!parsedData.students.length) {
     setStatus('No student data found. Check the debug panel below to see extracted text.', 'error');
     document.getElementById('results').classList.add('visible');
-    setProgress(null);
-    return;
+    setProgress(null); return;
   }
 
-  // Reset subject list toggles
-  subjectsVisible[1] = false;
-  subjectsVisible[2] = false;
-  document.getElementById('subjectsToggle1').classList.remove('active');
-  document.getElementById('subjectsToggle2').classList.remove('active');
-  document.getElementById('subjectsToggle1').textContent = '☰ Show subject list column';
-  document.getElementById('subjectsToggle2').textContent = '☰ Show subject list column';
+  // Initialise weights to 1.0 for all subjects
+  subjectWeights = {};
+  parsedData.allSubjects.forEach(s => { subjectWeights[s] = 1.0; });
+
+  // Build penalty panel if percent mode
+  buildPenaltyPanel(parsedData.allSubjects, scoreMode);
+
+  // Reset toggles
+  subjectsVisible[1] = false; subjectsVisible[2] = false;
+  ['subjectsToggle1','subjectsToggle2'].forEach(id => {
+    const btn = document.getElementById(id);
+    btn.classList.remove('active');
+    btn.textContent = '☰ Show subject list column';
+  });
 
   renderTables(parsedData);
   setProgress(null);
@@ -650,84 +488,130 @@ async function handleFile(file) {
 // ─── Parser ───────────────────────────────────────────────────────────────────
 function parseText(text, year, rankKey, scoreMode) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-
   const studentRe = /^([A-Z][A-Z'\-]+(?:\s+[A-Z][A-Z'\-]+)*,\s+[A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]*)*)\s+Semester\b/;
-
   const escapedYear = year.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const subjectRe = new RegExp(`^(.+?)(?:\\s+-\\s+(?:HSC|Preliminary)?)?\\s+${escapedYear}[A-Z]{2,}[\\dA-Z]*`);
-
   const escapedKey = rankKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // Rank mode: matches "Key: 17/61"
-  // Percent mode: matches "Key: 87%" or "Key: 87 %"
-  const rankRe   = new RegExp(`${escapedKey}[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`, 'i');
+  const rankRe    = new RegExp(`${escapedKey}[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`, 'i');
   const percentRe = new RegExp(`${escapedKey}[:\\s]+(\\d+(?:\\.\\d+)?)\\s*%`, 'i');
 
-  const students = [];
-  let curStudent = null;
-  let pendingSubject = null;
+  const students = []; let curStudent = null, pendingSubject = null;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  for (const line of lines) {
     if (line.includes('--- PAGE BREAK ---')) continue;
-
-    const studentMatch = line.match(studentRe);
-    if (studentMatch) {
-      curStudent = { name: studentMatch[1].trim(), subjects: [] };
-      students.push(curStudent);
-      pendingSubject = null;
-      continue;
-    }
-
+    const sm = line.match(studentRe);
+    if (sm) { curStudent = { name: sm[1].trim(), subjects: [] }; students.push(curStudent); pendingSubject = null; continue; }
     if (!curStudent) continue;
 
     if (scoreMode === 'percent') {
-      const pctMatch = line.match(percentRe);
-      if (pctMatch) {
-        const pct = parseFloat(pctMatch[1]);
-        if (pendingSubject) {
-          curStudent.subjects.push({ name: pendingSubject, score: pct });
-          pendingSubject = null;
-        }
-        continue;
-      }
+      const pm = line.match(percentRe);
+      if (pm && pendingSubject) { curStudent.subjects.push({ name: pendingSubject, score: parseFloat(pm[1]) }); pendingSubject = null; continue; }
     } else {
-      const rankMatch = line.match(rankRe);
-      if (rankMatch) {
-        const rank = parseInt(rankMatch[1]);
-        const total = parseInt(rankMatch[2]);
-        if (pendingSubject) {
-          curStudent.subjects.push({ name: pendingSubject, rank, total });
-          pendingSubject = null;
-        }
-        continue;
-      }
+      const rm = line.match(rankRe);
+      if (rm && pendingSubject) { curStudent.subjects.push({ name: pendingSubject, rank: parseInt(rm[1]), total: parseInt(rm[2]) }); pendingSubject = null; continue; }
     }
 
-    const subMatch = line.match(subjectRe);
-    if (subMatch) {
-      pendingSubject = subMatch[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/, '').trim();
-      continue;
-    }
+    const sub = line.match(subjectRe);
+    if (sub) { pendingSubject = sub[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/, '').trim(); }
   }
 
   const subjectSet = new Set();
   students.forEach(s => s.subjects.forEach(sub => subjectSet.add(sub.name)));
   const allSubjects = [...subjectSet].sort();
-
   return { students, allSubjects, scoreMode };
 }
+
+// ─── Z-score computation ──────────────────────────────────────────────────────
+function computeZScores(students, allSubjects) {
+  // Per-subject: mean and stdev of scores across students who have that subject
+  const stats = {};
+  allSubjects.forEach(subj => {
+    const scores = students.map(st => { const s = st.subjects.find(x => x.name === subj); return s ? s.score : null; }).filter(v => v !== null);
+    if (!scores.length) { stats[subj] = { mean: 0, sd: 1 }; return; }
+    const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const sd = Math.sqrt(scores.reduce((a, b) => a + (b - mean) ** 2, 0) / scores.length) || 1;
+    stats[subj] = { mean, sd };
+  });
+  // Attach z-score to each subject entry
+  return students.map(student => {
+    const subjects = student.subjects.map(s => {
+      const { mean, sd } = stats[s.name];
+      return { ...s, z: (s.score - mean) / sd };
+    });
+    return { ...student, subjects };
+  });
+}
+
+// ─── Penalty panel ────────────────────────────────────────────────────────────
+function buildPenaltyPanel(allSubjects, scoreMode) {
+  const panel = document.getElementById('penaltyPanel');
+  panel.style.display = scoreMode === 'percent' ? '' : 'none';
+  if (scoreMode !== 'percent') return;
+
+  const grid = document.getElementById('penaltyGrid');
+  grid.innerHTML = '';
+  allSubjects.forEach(subj => {
+    const row = document.createElement('div');
+    row.className = 'penalty-row';
+    row.dataset.subject = subj;
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'penalty-subject-name';
+    nameEl.textContent = subj;
+
+    if (penaltyMode === 'category') {
+      const sel = document.createElement('select');
+      sel.className = 'cat-select';
+      sel.innerHTML = '<option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option>';
+      sel.value = categoryFromWeight(subjectWeights[subj] || 1.0);
+      sel.addEventListener('change', () => { subjectWeights[subj] = CAT_MULTIPLIERS[sel.value]; updateRowStyle(row, CAT_MULTIPLIERS[sel.value]); });
+      updateRowStyle(row, CAT_MULTIPLIERS[sel.value]);
+      row.appendChild(nameEl); row.appendChild(sel);
+    } else {
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.min = '0'; inp.max = '5'; inp.step = '0.05';
+      inp.value = (subjectWeights[subj] || 1.0).toFixed(2);
+      inp.addEventListener('change', () => { subjectWeights[subj] = parseFloat(inp.value) || 1.0; });
+      row.appendChild(nameEl); row.appendChild(inp);
+    }
+    grid.appendChild(row);
+  });
+}
+
+function categoryFromWeight(w) {
+  if (w <= 0.85) return 'easy';
+  if (w >= 1.15) return 'hard';
+  return 'normal';
+}
+
+function updateRowStyle(row, w) {
+  row.style.borderColor = w < 1 ? '#a8d0a8' : w > 1 ? '#a8b8d8' : '';
+  row.style.background   = w < 1 ? '#e8f4e8' : w > 1 ? '#e8eef8' : '';
+}
+
+function setPenaltyMode(mode) {
+  penaltyMode = mode;
+  document.getElementById('modeBtnCategory').classList.toggle('active', mode === 'category');
+  document.getElementById('modeBtnMultiplier').classList.toggle('active', mode === 'multiplier');
+  document.getElementById('categoryLegend').style.display = mode === 'category' ? 'flex' : 'none';
+  if (parsedData) buildPenaltyPanel(parsedData.allSubjects, parsedData.scoreMode);
+}
+
+function applyWeights() { if (parsedData) renderTables(parsedData); }
 
 // ─── Render ───────────────────────────────────────────────────────────────────
 function renderTables({ students, allSubjects, scoreMode }) {
   const isPercent = scoreMode === 'percent';
 
-  // Helper: get display value and CSS class for a subject entry
+  // If percent mode, compute z-scores first
+  let workingStudents = students;
+  if (isPercent) workingStudents = computeZScores(students, allSubjects);
+
   function pillFor(s) {
     if (!s) return '<span class="pill missing">—</span>';
     if (isPercent) {
-      const pct = s.score;
-      const cls = pct >= 80 ? 'top' : pct < 50 ? 'bottom' : '';
-      return `<span class="pill ${cls}">${pct.toFixed(1)}%</span>`;
+      const cls = s.score >= 80 ? 'top' : s.score < 50 ? 'bottom' : '';
+      return `<span class="pill ${cls}">${s.score.toFixed(1)}%</span>`;
     } else {
       const ratio = s.rank / s.total;
       const cls = ratio <= 0.25 ? 'top' : ratio >= 0.75 ? 'bottom' : '';
@@ -735,66 +619,58 @@ function renderTables({ students, allSubjects, scoreMode }) {
     }
   }
 
+  // Compute weighted average z or plain avg rank
+  function computeAvg(student) {
+    const subs = student.subjects;
+    if (!subs.length) return null;
+    if (isPercent) {
+      let weightedSum = 0, weightSum = 0;
+      subs.forEach(s => { const w = subjectWeights[s.name] ?? 1.0; weightedSum += s.z * w; weightSum += w; });
+      return weightSum > 0 ? weightedSum / weightSum : null;
+    } else {
+      return subs.reduce((a, s) => a + s.rank, 0) / subs.length;
+    }
+  }
+
+  function rawAvgZ(student) {
+    const subs = student.subjects;
+    if (!subs.length || !isPercent) return null;
+    return subs.reduce((a, s) => a + s.z, 0) / subs.length;
+  }
+
   // ── Table 1 ──
   const rankTable = document.getElementById('rankTable');
   document.getElementById('rankCount').textContent = `${students.length} students · ${allSubjects.length} subjects`;
-
-  const scoreColLabel = isPercent ? 'Avg %' : 'Avg Rank';
-
-  let html = `<thead><tr>
-    <th>Student</th>
-    <th class="center col-subjects-list hide">Subjects</th>
-    <th class="center">Subjects Found</th>`;
+  let html = `<thead><tr><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects Found</th>`;
   allSubjects.forEach(s => { html += `<th class="center">${s}</th>`; });
   html += '</tr></thead><tbody>';
-
-  students.forEach(student => {
-    const subMap = {};
-    student.subjects.forEach(s => { subMap[s.name] = s; });
+  workingStudents.forEach(student => {
+    const subMap = {}; student.subjects.forEach(s => { subMap[s.name] = s; });
     const subjectListStr = student.subjects.map(s => s.name).join(', ');
-    html += `<tr>
-      <td class="name">${student.name}</td>
-      <td class="subjects-list-cell col-subjects-list hide">${subjectListStr || '—'}</td>
-      <td class="center">${student.subjects.length}</td>`;
-    allSubjects.forEach(subj => {
-      html += `<td class="center">${pillFor(subMap[subj])}</td>`;
-    });
+    html += `<tr><td class="name">${student.name}</td><td class="subjects-list-cell col-subjects-list hide">${subjectListStr || '—'}</td><td class="center">${student.subjects.length}</td>`;
+    allSubjects.forEach(subj => { html += `<td class="center">${pillFor(subMap[subj])}</td>`; });
     html += '</tr>';
   });
   html += '</tbody>';
   rankTable.innerHTML = html;
+  if (!subjectsVisible[1]) rankTable.querySelectorAll('.col-subjects-list').forEach(el => el.classList.add('hide'));
 
-  // ── Table 2: leaderboard ──
+  // ── Table 2 ──
   const leaderTable = document.getElementById('leaderTable');
+  const withStats = workingStudents.map(student => ({ ...student, avg: computeAvg(student), rawZ: rawAvgZ(student) }))
+    .sort((a, b) => {
+      if (a.avg === null) return 1; if (b.avg === null) return -1;
+      return isPercent ? b.avg - a.avg : a.avg - b.avg;
+    });
 
-  const withStats = students.map(student => {
-    const subs = student.subjects;
-    let avg = null;
-    if (subs.length) {
-      if (isPercent) {
-        avg = subs.reduce((acc, s) => acc + s.score, 0) / subs.length;
-      } else {
-        avg = subs.reduce((acc, s) => acc + s.rank, 0) / subs.length;
-      }
-    }
-    return { ...student, avg };
-  }).sort((a, b) => {
-    if (a.avg === null) return 1;
-    if (b.avg === null) return -1;
-    // Percent: higher is better (descending). Rank: lower is better (ascending).
-    return isPercent ? b.avg - a.avg : a.avg - b.avg;
-  });
-
+  const anyWeighted = isPercent && allSubjects.some(s => (subjectWeights[s] ?? 1.0) !== 1.0);
   document.getElementById('boardCount').textContent = isPercent
-    ? 'Sorted by highest average mark'
+    ? (anyWeighted ? 'Sorted by weighted avg z-score' : 'Sorted by avg z-score')
     : 'Sorted by lowest average rank';
 
-  let html2 = `<thead><tr>
-    <th class="center">Position</th>
-    <th>Student</th>
-    <th class="center col-subjects-list hide">Subjects</th>
-    <th class="center">Subjects Found</th>
-    <th class="center">${scoreColLabel}</th>`;
+  const scoreColLabel = isPercent ? (anyWeighted ? 'Wtd. Avg Z' : 'Avg Z-Score') : 'Avg Rank';
+
+  let html2 = `<thead><tr><th class="center">Position</th><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects Found</th><th class="center">${scoreColLabel}</th>`;
   allSubjects.forEach(s => { html2 += `<th class="center">${s}</th>`; });
   html2 += '</tr></thead><tbody>';
 
@@ -803,27 +679,35 @@ function renderTables({ students, allSubjects, scoreMode }) {
     const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '';
     const posClass = pos === 1 ? 'p1' : pos === 2 ? 'p2' : pos === 3 ? 'p3' : '';
     const rowClass = pos === 1 ? 'gold' : '';
-    const subMap = {};
-    student.subjects.forEach(s => { subMap[s.name] = s; });
+    const subMap = {}; student.subjects.forEach(s => { subMap[s.name] = s; });
     const subjectListStr = student.subjects.map(s => s.name).join(', ');
-    const avgDisplay = student.avg !== null
-      ? (isPercent ? student.avg.toFixed(1) + '%' : student.avg.toFixed(2))
-      : '—';
+
+    let avgCell;
+    if (student.avg === null) {
+      avgCell = '—';
+    } else if (isPercent) {
+      const display = student.avg.toFixed(3);
+      if (anyWeighted && student.rawZ !== null) {
+        avgCell = `<span class="has-tip" data-tip="Unweighted avg z: ${student.rawZ.toFixed(3)}">${display}</span>`;
+      } else {
+        avgCell = display;
+      }
+    } else {
+      avgCell = student.avg.toFixed(2);
+    }
 
     html2 += `<tr class="${rowClass}">
       <td class="center"><span class="position-badge ${posClass}">${medal || pos}</span></td>
       <td class="name">${student.name}</td>
       <td class="subjects-list-cell col-subjects-list hide">${subjectListStr || '—'}</td>
       <td class="center">${student.subjects.length}</td>
-      <td class="center" style="font-weight:500">${avgDisplay}</td>`;
-
-    allSubjects.forEach(subj => {
-      html2 += `<td class="center">${pillFor(subMap[subj])}</td>`;
-    });
+      <td class="center" style="font-weight:500">${avgCell}</td>`;
+    allSubjects.forEach(subj => { html2 += `<td class="center">${pillFor(subMap[subj])}</td>`; });
     html2 += '</tr>';
   });
   html2 += '</tbody>';
   leaderTable.innerHTML = html2;
+  if (!subjectsVisible[2]) leaderTable.querySelectorAll('.col-subjects-list').forEach(el => el.classList.add('hide'));
 }
 
 // ─── CSV Export ───────────────────────────────────────────────────────────────
@@ -832,95 +716,65 @@ function exportCSV(which) {
   const { students, allSubjects, scoreMode } = parsedData;
   const isPercent = scoreMode === 'percent';
   const year = document.getElementById('yearSelect').value;
-  const scoreLabel = isPercent ? 'Avg %' : 'Avg Rank';
-  let rows = [];
+  let workingStudents = students;
+  if (isPercent) workingStudents = computeZScores(students, allSubjects);
+
+  function computeAvg(student) {
+    const subs = student.subjects; if (!subs.length) return null;
+    if (isPercent) { let ws = 0, wt = 0; subs.forEach(s => { const w = subjectWeights[s.name] ?? 1.0; ws += s.z * w; wt += w; }); return wt > 0 ? ws / wt : null; }
+    return subs.reduce((a, s) => a + s.rank, 0) / subs.length;
+  }
 
   function scoreStr(s) {
     if (!s) return '';
     return isPercent ? s.score.toFixed(1) + '%' : `${s.rank}/${s.total}`;
   }
 
+  const scoreLabel = isPercent ? 'Avg Z-Score' : 'Avg Rank';
+  let rows = [];
+
   if (which === 'ranks') {
     rows.push(['Student', 'Subjects', 'Subjects Found', ...allSubjects]);
-    students.forEach(student => {
-      const subMap = {};
-      student.subjects.forEach(s => { subMap[s.name] = s; });
-      rows.push([
-        student.name,
-        student.subjects.map(s => s.name).join('; '),
-        student.subjects.length,
-        ...allSubjects.map(subj => scoreStr(subMap[subj]))
-      ]);
+    workingStudents.forEach(student => {
+      const subMap = {}; student.subjects.forEach(s => { subMap[s.name] = s; });
+      rows.push([student.name, student.subjects.map(s => s.name).join('; '), student.subjects.length, ...allSubjects.map(subj => scoreStr(subMap[subj]))]);
     });
   } else {
-    const withStats = students.map(student => {
-      const subs = student.subjects;
-      let avg = null;
-      if (subs.length) {
-        avg = isPercent
-          ? subs.reduce((a, s) => a + s.score, 0) / subs.length
-          : subs.reduce((a, s) => a + s.rank, 0) / subs.length;
-      }
-      return { ...student, avg };
-    }).sort((a, b) => {
-      if (a.avg === null) return 1;
-      if (b.avg === null) return -1;
-      return isPercent ? b.avg - a.avg : a.avg - b.avg;
-    });
-
+    const withStats = workingStudents.map(s => ({ ...s, avg: computeAvg(s) }))
+      .sort((a, b) => { if (a.avg === null) return 1; if (b.avg === null) return -1; return isPercent ? b.avg - a.avg : a.avg - b.avg; });
     rows.push(['Position', 'Student', 'Subjects', 'Subjects Found', scoreLabel, ...allSubjects]);
     withStats.forEach((student, idx) => {
-      const subMap = {};
-      student.subjects.forEach(s => { subMap[s.name] = s; });
-      const avgDisplay = student.avg !== null
-        ? (isPercent ? student.avg.toFixed(1) + '%' : student.avg.toFixed(2))
-        : '';
-      rows.push([
-        idx + 1,
-        student.name,
-        student.subjects.map(s => s.name).join('; '),
-        student.subjects.length,
-        avgDisplay,
-        ...allSubjects.map(subj => scoreStr(subMap[subj]))
-      ]);
+      const subMap = {}; student.subjects.forEach(s => { subMap[s.name] = s; });
+      rows.push([idx + 1, student.name, student.subjects.map(s => s.name).join('; '), student.subjects.length,
+        student.avg !== null ? student.avg.toFixed(3) : '', ...allSubjects.map(subj => scoreStr(subMap[subj]))]);
     });
   }
 
   const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `rankforge-year${year}-${which}.csv`;
-  a.click();
+  const a = document.createElement('a'); a.href = url; a.download = `rankforge-year${year}-${which}.csv`; a.click();
   URL.revokeObjectURL(url);
 }
 
-// ─── Score mode change ───────────────────────────────────────────────────────
+// ─── Score mode change ────────────────────────────────────────────────────────
 function onScoreModeChange() {
   const isPercent = document.getElementById('scoreMode').value === 'percent';
-  const label = document.getElementById('rankKeyLabel');
+  document.getElementById('rankKeyLabel').textContent = isPercent ? 'Mark search key' : 'Rank search key';
   const input = document.getElementById('rankKey');
-  if (isPercent) {
-    label.textContent = 'Mark search key';
-    input.placeholder = 'e.g. Assessment Mark';
-    if (input.value === 'Overall Assessment Rank') input.value = 'Assessment Mark';
-  } else {
-    label.textContent = 'Rank search key';
-    input.placeholder = 'e.g. Overall Assessment Rank';
-    if (input.value === 'Assessment Mark') input.value = 'Overall Assessment Rank';
-  }
+  input.placeholder = isPercent ? 'e.g. Assessment Mark' : 'e.g. Overall Assessment Rank';
+  if (isPercent && input.value === 'Overall Assessment Rank') input.value = 'Assessment Mark';
+  if (!isPercent && input.value === 'Assessment Mark') input.value = 'Overall Assessment Rank';
 }
 
 // ─── Reset ────────────────────────────────────────────────────────────────────
 function resetTool() {
-  parsedData = null;
+  parsedData = null; subjectWeights = {};
   document.getElementById('results').classList.remove('visible');
   document.getElementById('uploadZone').style.display = '';
   document.getElementById('fileInput').value = '';
-  setStatus('');
-  setProgress(null);
-  // Re-expand sections for next use
+  document.getElementById('penaltyPanel').style.display = 'none';
+  setStatus(''); setProgress(null);
   ['body1','body2'].forEach(id => document.getElementById(id).classList.remove('hidden'));
   ['header1','header2'].forEach(id => document.getElementById(id).classList.remove('collapsed'));
   document.getElementById('toggle1').textContent = 'collapse ▲';
