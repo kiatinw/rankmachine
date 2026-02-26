@@ -488,14 +488,26 @@ function computeZScores(students,allSubjects){
 
 // ── Get resolved subject name (handles maths grouping) ────────────────────────
 function resolvedSubjectName(subjectName, studentMathsCode){
-  // If this is a maths subject and we have grouping active, return the group name
-  if(!isYr710()||!parsedData||!parsedData.mathsCodes.length)return subjectName;
-  if(!subjectName.toLowerCase().includes('math')&&!/mma/i.test(subjectName))return subjectName;
-  // Find which group this student's maths code belongs to
-  if(!studentMathsCode)return subjectName;
-  const grp=mathsGroups.find(g=>g.codes.includes(studentMathsCode));
-  if(grp)return 'Maths: '+grp.name;
-  return 'Maths: Unassigned ('+studentMathsCode+')';
+  // Maths grouping
+  if (isYr710() && parsedData && parsedData.mathsCodes.length && /math/i.test(subjectName)){
+    if(studentMathsCode){
+      const grp = mathsGroups.find(g => g.codes.includes(studentMathsCode));
+      return grp ? 'Maths: ' + grp.name : 'Maths: Unassigned ('+studentMathsCode+')';
+    }
+    return subjectName;
+  }
+
+  // G&T subjects
+  if(parsedData && parsedData.scoreMode==='percent'){
+    // Check if the subject has any G&T code
+    const gtEntry = parsedData.students.some(st => {
+      const s = st.subjects.find(sub => sub.name === subjectName);
+      return s && s.isGT;
+    });
+    if(gtEntry) return subjectName + ' G&T';
+  }
+
+  return subjectName;
 }
 
 // ── Effective subjects list (with maths groups collapsed) ──────────────────────
@@ -646,17 +658,21 @@ function renderMathsGroups(){
   container.innerHTML=html;
 }
 
-function chipHTML(code,groupId){
-  return `<div class="maths-class-chip" draggable="true" id="chip_${code}" ondragstart="chipDragStart(event,'${code}',${JSON.stringify(groupId)})">
-    ${escHTML(code)}
-    <button class="chip-remove" onclick="moveChipTo('${code}','unassigned')" title="Move to unassigned">✕</button>
-  </div>`;
+function chipHTML(code, groupId){
+  return `<div class="maths-class-chip" draggable="true" id="chip_${code}" 
+              ondragstart="chipDragStart(event,'${code}',${JSON.stringify(groupId)})">
+            ${escHTML(code)}
+            <button class="chip-remove" 
+                    onclick="event.stopPropagation(); moveChipTo('${code}','unassigned')" 
+                    title="Move to unassigned">✕</button>
+          </div>`;
 }
 
-function chipDragStart(e,code,fromGroupId){
-  dragChip={code,fromGroupId};
-  e.dataTransfer.effectAllowed='move';
-  e.dataTransfer.setData('text/plain',code);
+function chipDragStart(e, code, fromGroupId){
+  e.stopPropagation(); // prevent bubbling to button
+  dragChip = { code, fromGroupId: fromGroupId === 'unassigned' ? 'unassigned' : Number(fromGroupId) };
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', code);
 }
 function dzOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over')}
 function dzLeave(e){e.currentTarget.classList.remove('drag-over')}
