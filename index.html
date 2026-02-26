@@ -12,10 +12,10 @@
 body{font-family:'DM Mono',monospace;background:var(--paper);color:var(--ink);min-height:100vh;padding:2rem}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")}
 
-.masthead{border-bottom:2px solid var(--ink);padding-bottom:1rem;margin-bottom:2rem}
-.masthead h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,5vw,3.5rem);line-height:1;letter-spacing:-.02em}
+.masthead{border-bottom:2px solid var(--ink);padding-bottom:1.5rem;margin-bottom:2rem;text-align:center}
+.masthead h1{font-family:'DM Serif Display',serif;font-size:clamp(3.5rem,10vw,7rem);line-height:1;letter-spacing:-.03em}
 .masthead h1 em{font-style:italic;color:var(--accent)}
-.masthead .tagline{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
+.masthead .tagline{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:.5rem}
 
 .panel{background:var(--cream);border:1px solid var(--border);border-radius:4px;margin-bottom:1.5rem;overflow:hidden}
 .panel-header{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;cursor:pointer;user-select:none}
@@ -237,6 +237,7 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
   <div class="actions">
     <button class="btn" onclick="exportCSV('ranks')">⬇ Export scores CSV</button>
     <button class="btn" onclick="exportCSV('best')">⬇ Export leaderboard CSV</button>
+    <button class="btn secondary" onclick="reparseFile()">↻ Re-parse with current settings</button>
     <button class="btn secondary" onclick="resetTool()">↺ Load another PDF</button>
   </div>
 
@@ -300,6 +301,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 
 // ── State ──────────────────────────────────────────────────────────────────────
 let parsedData=null;
+let lastUploadedFile=null;
 let subjectWeights={};
 let penaltyMode='category';
 let mathsGroups=[];       // [{id,name,codes:[]}]
@@ -343,6 +345,7 @@ zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-
 fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
 
 async function handleFile(file){
+  lastUploadedFile=file;
   setStatus('Loading PDF…');setProgress(5);
   const buf=await file.arrayBuffer();
   const pdf=await pdfjsLib.getDocument({data:buf}).promise;
@@ -907,8 +910,18 @@ function exportCSV(which){
 }
 
 // ── Reset ──────────────────────────────────────────────────────────────────────
+function reparseFile(){
+  if(!lastUploadedFile){setStatus('No file loaded — please upload a PDF first.','error');return;}
+  // Reset results but keep settings, then re-run
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('penaltyPanel').style.display='none';
+  document.getElementById('top30Section').style.display='none';
+  handleFile(lastUploadedFile);
+}
+
 function resetTool(){
-  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dragCode=null;
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dragCode=null;lastUploadedFile=null;
   document.getElementById('results').classList.remove('visible');
   document.getElementById('uploadZone').style.display='';
   document.getElementById('fileInput').value='';
