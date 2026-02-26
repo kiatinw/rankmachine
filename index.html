@@ -437,8 +437,19 @@
     </div>
 
     <div class="setting-label-group">
-      <label for="rankKey">Rank search key</label>
-      <span class="hint">The text that appears just before the X/Y rank in the PDF. RankForge scans each line for this phrase and extracts the number that follows it. Change this if your reports use different wording.</span>
+      <label for="scoreMode">Score mode</label>
+      <span class="hint">Choose whether your reports show a <strong>rank</strong> (e.g. 17/61) or a <strong>percentage mark</strong> (e.g. 87%). Years 11–12 typically use ranks; Years 7–10 typically use percentage marks. This also changes how the leaderboard is sorted.</span>
+    </div>
+    <div class="setting-control">
+      <select id="scoreMode" onchange="onScoreModeChange()">
+        <option value="rank">Rank (e.g. 17/61) — sort by lowest</option>
+        <option value="percent">Percentage mark (e.g. 87%) — sort by highest</option>
+      </select>
+    </div>
+
+    <div class="setting-label-group">
+      <label for="rankKey" id="rankKeyLabel">Rank search key</label>
+      <span class="hint" id="rankKeyHint">The text that appears just before the score in the PDF. RankForge scans each line for this phrase and extracts the number that follows it. Change this if your reports use different wording.</span>
     </div>
     <div class="setting-control">
       <input type="text" id="rankKey" value="Overall Assessment Rank" placeholder="e.g. Overall Assessment Rank" />
@@ -610,7 +621,8 @@ async function handleFile(file) {
 
   const year = document.getElementById('yearSelect').value;
   const rankKey = document.getElementById('rankKey').value.trim() || 'Overall Assessment Rank';
-  parsedData = parseText(fullText, year, rankKey);
+  const scoreMode = document.getElementById('scoreMode').value;
+  parsedData = parseText(fullText, year, rankKey, scoreMode);
   setProgress(90);
 
   if (!parsedData.students.length) {
@@ -636,7 +648,7 @@ async function handleFile(file) {
 }
 
 // ─── Parser ───────────────────────────────────────────────────────────────────
-function parseText(text, year, rankKey) {
+function parseText(text, year, rankKey, scoreMode) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
   const studentRe = /^([A-Z][A-Z'\-]+(?:\s+[A-Z][A-Z'\-]+)*,\s+[A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]*)*)\s+Semester\b/;
@@ -645,7 +657,10 @@ function parseText(text, year, rankKey) {
   const subjectRe = new RegExp(`^(.+?)(?:\\s+-\\s+(?:HSC|Preliminary)?)?\\s+${escapedYear}[A-Z]{2,}[\\dA-Z]*`);
 
   const escapedKey = rankKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const rankRe = new RegExp(`${escapedKey}[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`, 'i');
+  // Rank mode: matches "Key: 17/61"
+  // Percent mode: matches "Key: 87%" or "Key: 87 %"
+  const rankRe   = new RegExp(`${escapedKey}[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`, 'i');
+  const percentRe = new RegExp(`${escapedKey}[:\\s]+(\\d+(?:\\.\\d+)?)\\s*%`, 'i');
 
   const students = [];
   let curStudent = null;
@@ -665,15 +680,27 @@ function parseText(text, year, rankKey) {
 
     if (!curStudent) continue;
 
-    const rankMatch = line.match(rankRe);
-    if (rankMatch) {
-      const rank = parseInt(rankMatch[1]);
-      const total = parseInt(rankMatch[2]);
-      if (pendingSubject) {
-        curStudent.subjects.push({ name: pendingSubject, rank, total });
-        pendingSubject = null;
+    if (scoreMode === 'percent') {
+      const pctMatch = line.match(percentRe);
+      if (pctMatch) {
+        const pct = parseFloat(pctMatch[1]);
+        if (pendingSubject) {
+          curStudent.subjects.push({ name: pendingSubject, score: pct });
+          pendingSubject = null;
+        }
+        continue;
       }
-      continue;
+    } else {
+      const rankMatch = line.match(rankRe);
+      if (rankMatch) {
+        const rank = parseInt(rankMatch[1]);
+        const total = parseInt(rankMatch[2]);
+        if (pendingSubject) {
+          curStudent.subjects.push({ name: pendingSubject, rank, total });
+          pendingSubject = null;
+        }
+        continue;
+      }
     }
 
     const subMatch = line.match(subjectRe);
@@ -687,15 +714,32 @@ function parseText(text, year, rankKey) {
   students.forEach(s => s.subjects.forEach(sub => subjectSet.add(sub.name)));
   const allSubjects = [...subjectSet].sort();
 
-  return { students, allSubjects };
+  return { students, allSubjects, scoreMode };
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────────
-function renderTables({ students, allSubjects }) {
+function renderTables({ students, allSubjects, scoreMode }) {
+  const isPercent = scoreMode === 'percent';
+
+  // Helper: get display value and CSS class for a subject entry
+  function pillFor(s) {
+    if (!s) return '<span class="pill missing">—</span>';
+    if (isPercent) {
+      const pct = s.score;
+      const cls = pct >= 80 ? 'top' : pct < 50 ? 'bottom' : '';
+      return `<span class="pill ${cls}">${pct.toFixed(1)}%</span>`;
+    } else {
+      const ratio = s.rank / s.total;
+      const cls = ratio <= 0.25 ? 'top' : ratio >= 0.75 ? 'bottom' : '';
+      return `<span class="pill ${cls}">${s.rank}/${s.total}</span>`;
+    }
+  }
 
   // ── Table 1 ──
   const rankTable = document.getElementById('rankTable');
   document.getElementById('rankCount').textContent = `${students.length} students · ${allSubjects.length} subjects`;
+
+  const scoreColLabel = isPercent ? 'Avg %' : 'Avg Rank';
 
   let html = `<thead><tr>
     <th>Student</th>
@@ -713,37 +757,44 @@ function renderTables({ students, allSubjects }) {
       <td class="subjects-list-cell col-subjects-list hide">${subjectListStr || '—'}</td>
       <td class="center">${student.subjects.length}</td>`;
     allSubjects.forEach(subj => {
-      const s = subMap[subj];
-      if (!s) {
-        html += `<td class="center"><span class="pill missing">—</span></td>`;
-      } else {
-        const pct = s.rank / s.total;
-        const cls = pct <= 0.25 ? 'top' : pct >= 0.75 ? 'bottom' : '';
-        html += `<td class="center"><span class="pill ${cls}">${s.rank}/${s.total}</span></td>`;
-      }
+      html += `<td class="center">${pillFor(subMap[subj])}</td>`;
     });
     html += '</tr>';
   });
   html += '</tbody>';
   rankTable.innerHTML = html;
 
-  // ── Table 2 ──
+  // ── Table 2: leaderboard ──
   const leaderTable = document.getElementById('leaderTable');
 
   const withStats = students.map(student => {
     const subs = student.subjects;
-    const avg = subs.length ? subs.reduce((acc, s) => acc + s.rank, 0) / subs.length : null;
+    let avg = null;
+    if (subs.length) {
+      if (isPercent) {
+        avg = subs.reduce((acc, s) => acc + s.score, 0) / subs.length;
+      } else {
+        avg = subs.reduce((acc, s) => acc + s.rank, 0) / subs.length;
+      }
+    }
     return { ...student, avg };
-  }).sort((a, b) => (a.avg ?? Infinity) - (b.avg ?? Infinity));
+  }).sort((a, b) => {
+    if (a.avg === null) return 1;
+    if (b.avg === null) return -1;
+    // Percent: higher is better (descending). Rank: lower is better (ascending).
+    return isPercent ? b.avg - a.avg : a.avg - b.avg;
+  });
 
-  document.getElementById('boardCount').textContent = 'Sorted by lowest average rank';
+  document.getElementById('boardCount').textContent = isPercent
+    ? 'Sorted by highest average mark'
+    : 'Sorted by lowest average rank';
 
   let html2 = `<thead><tr>
     <th class="center">Position</th>
     <th>Student</th>
     <th class="center col-subjects-list hide">Subjects</th>
     <th class="center">Subjects Found</th>
-    <th class="center">Avg Rank</th>`;
+    <th class="center">${scoreColLabel}</th>`;
   allSubjects.forEach(s => { html2 += `<th class="center">${s}</th>`; });
   html2 += '</tr></thead><tbody>';
 
@@ -755,23 +806,19 @@ function renderTables({ students, allSubjects }) {
     const subMap = {};
     student.subjects.forEach(s => { subMap[s.name] = s; });
     const subjectListStr = student.subjects.map(s => s.name).join(', ');
+    const avgDisplay = student.avg !== null
+      ? (isPercent ? student.avg.toFixed(1) + '%' : student.avg.toFixed(2))
+      : '—';
 
     html2 += `<tr class="${rowClass}">
       <td class="center"><span class="position-badge ${posClass}">${medal || pos}</span></td>
       <td class="name">${student.name}</td>
       <td class="subjects-list-cell col-subjects-list hide">${subjectListStr || '—'}</td>
       <td class="center">${student.subjects.length}</td>
-      <td class="center" style="font-weight:500">${student.avg ? student.avg.toFixed(2) : '—'}</td>`;
+      <td class="center" style="font-weight:500">${avgDisplay}</td>`;
 
     allSubjects.forEach(subj => {
-      const s = subMap[subj];
-      if (!s) {
-        html2 += `<td class="center"><span class="pill missing">—</span></td>`;
-      } else {
-        const pct = s.rank / s.total;
-        const cls = pct <= 0.25 ? 'top' : pct >= 0.75 ? 'bottom' : '';
-        html2 += `<td class="center"><span class="pill ${cls}">${s.rank}/${s.total}</span></td>`;
-      }
+      html2 += `<td class="center">${pillFor(subMap[subj])}</td>`;
     });
     html2 += '</tr>';
   });
@@ -782,9 +829,16 @@ function renderTables({ students, allSubjects }) {
 // ─── CSV Export ───────────────────────────────────────────────────────────────
 function exportCSV(which) {
   if (!parsedData) return;
-  const { students, allSubjects } = parsedData;
+  const { students, allSubjects, scoreMode } = parsedData;
+  const isPercent = scoreMode === 'percent';
   const year = document.getElementById('yearSelect').value;
+  const scoreLabel = isPercent ? 'Avg %' : 'Avg Rank';
   let rows = [];
+
+  function scoreStr(s) {
+    if (!s) return '';
+    return isPercent ? s.score.toFixed(1) + '%' : `${s.rank}/${s.total}`;
+  }
 
   if (which === 'ranks') {
     rows.push(['Student', 'Subjects', 'Subjects Found', ...allSubjects]);
@@ -795,27 +849,39 @@ function exportCSV(which) {
         student.name,
         student.subjects.map(s => s.name).join('; '),
         student.subjects.length,
-        ...allSubjects.map(subj => { const s = subMap[subj]; return s ? `${s.rank}/${s.total}` : ''; })
+        ...allSubjects.map(subj => scoreStr(subMap[subj]))
       ]);
     });
   } else {
     const withStats = students.map(student => {
       const subs = student.subjects;
-      const avg = subs.length ? subs.reduce((a, s) => a + s.rank, 0) / subs.length : null;
+      let avg = null;
+      if (subs.length) {
+        avg = isPercent
+          ? subs.reduce((a, s) => a + s.score, 0) / subs.length
+          : subs.reduce((a, s) => a + s.rank, 0) / subs.length;
+      }
       return { ...student, avg };
-    }).sort((a, b) => (a.avg ?? Infinity) - (b.avg ?? Infinity));
+    }).sort((a, b) => {
+      if (a.avg === null) return 1;
+      if (b.avg === null) return -1;
+      return isPercent ? b.avg - a.avg : a.avg - b.avg;
+    });
 
-    rows.push(['Position', 'Student', 'Subjects', 'Subjects Found', 'Avg Rank', ...allSubjects]);
+    rows.push(['Position', 'Student', 'Subjects', 'Subjects Found', scoreLabel, ...allSubjects]);
     withStats.forEach((student, idx) => {
       const subMap = {};
       student.subjects.forEach(s => { subMap[s.name] = s; });
+      const avgDisplay = student.avg !== null
+        ? (isPercent ? student.avg.toFixed(1) + '%' : student.avg.toFixed(2))
+        : '';
       rows.push([
         idx + 1,
         student.name,
         student.subjects.map(s => s.name).join('; '),
         student.subjects.length,
-        student.avg ? student.avg.toFixed(2) : '',
-        ...allSubjects.map(subj => { const s = subMap[subj]; return s ? `${s.rank}/${s.total}` : ''; })
+        avgDisplay,
+        ...allSubjects.map(subj => scoreStr(subMap[subj]))
       ]);
     });
   }
@@ -828,6 +894,22 @@ function exportCSV(which) {
   a.download = `rankforge-year${year}-${which}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ─── Score mode change ───────────────────────────────────────────────────────
+function onScoreModeChange() {
+  const isPercent = document.getElementById('scoreMode').value === 'percent';
+  const label = document.getElementById('rankKeyLabel');
+  const input = document.getElementById('rankKey');
+  if (isPercent) {
+    label.textContent = 'Mark search key';
+    input.placeholder = 'e.g. Assessment Mark';
+    if (input.value === 'Overall Assessment Rank') input.value = 'Assessment Mark';
+  } else {
+    label.textContent = 'Rank search key';
+    input.placeholder = 'e.g. Overall Assessment Rank';
+    if (input.value === 'Assessment Mark') input.value = 'Overall Assessment Rank';
+  }
 }
 
 // ─── Reset ────────────────────────────────────────────────────────────────────
