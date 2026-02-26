@@ -488,110 +488,63 @@ async function handleFile(file) {
 function parseText(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-  // Regex to match "Overall Assessment Rank: 5/41" or "Overall Assessment Rank:5/41"
+  // "SMITH, John Semester 2, 2025 - 12-1 - 12"
+  // Name is everything before " Semester"
+  const studentRe = /^([A-Z][A-Z'\-]+(?:\s+[A-Z][A-Z'\-]+)*,\s+[A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]*)*)\s+Semester\b/;
+
+  // Subject name: everything before the class code e.g. 12MXX1, 12ENA2
+  // Handles both "Subject - HSC 12XYZ" and "Subject 12XYZ" formats
+  const subjectRe = /^(.+?)(?:\s+-\s+(?:HSC|Preliminary)?)?\s+12[A-Z]{2,}[\dA-Z]*/;
+
+  // "Overall Assessment Rank: 17/61 ..."
   const rankRe = /Overall\s+Assessment\s+Rank[:\s]+(\d+)\s*\/\s*(\d+)/i;
 
-  // We'll try to detect student blocks.
-  // Heuristic: a student name line is a line that:
-  //   - Is not all-caps label / number
-  //   - Appears before subject data
-  //   - Looks like 2-4 words of proper-case text
-  // We'll scan for rank lines and then look backwards for the nearest name-like heading.
-
   const students = [];
-  let currentStudent = null;
-  let currentSubject = null;
-
-  // Build a list of (lineIndex, type, data)
-  const events = [];
+  let curStudent = null;
+  let pendingSubject = null;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const rankMatch = line.match(rankRe);
-    if (rankMatch) {
-      events.push({ i, type: 'rank', rank: parseInt(rankMatch[1]), total: parseInt(rankMatch[2]) });
-    }
-  }
-
-  // Now parse by walking through all lines, tracking context
-  // Strategy: collect runs of lines between "--- PAGE BREAK ---" marks
-  // For each student block, try to find the name as the first "title-like" line
-
-  // Reset and do a linear pass
-  const students2 = [];
-  let curStudentName = null;
-  let curSubjectName = null;
-  let pendingSubjectName = null;
-
-  // Lines that look like a subject heading (e.g. "Mathematics", "English Advanced")
-  // These appear before the rank line for that subject
-  const subjectLineRe = /^[A-Z][a-zA-Z\s\/&\-]+$/;
-  // Name: Proper Case, 2-4 words, no numbers, not a known label
-  const nameRe = /^([A-Z][a-z]+(?:\s+[A-Z][a-z']+){1,4})$/;
-  const skipWords = new Set(['Overall', 'Assessment', 'Rank', 'Subject', 'Student', 'Report', 'Year', 'Semester', 'Term', 'Page', 'Class']);
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
     if (line.includes('--- PAGE BREAK ---')) continue;
 
+    // ── New student? ──
+    const studentMatch = line.match(studentRe);
+    if (studentMatch) {
+      curStudent = { name: studentMatch[1].trim(), subjects: [] };
+      students.push(curStudent);
+      pendingSubject = null;
+      continue;
+    }
+
+    if (!curStudent) continue;
+
+    // ── Rank line ──
     const rankMatch = line.match(rankRe);
     if (rankMatch) {
       const rank = parseInt(rankMatch[1]);
       const total = parseInt(rankMatch[2]);
-      // Find or create student
-      if (!curStudentName) curStudentName = 'Unknown Student ' + (students2.length + 1);
-      let student = students2.find(s => s.name === curStudentName);
-      if (!student) {
-        student = { name: curStudentName, subjects: [] };
-        students2.push(student);
+      if (pendingSubject) {
+        curStudent.subjects.push({ name: pendingSubject, rank, total });
+        pendingSubject = null;
       }
-      const subjectName = pendingSubjectName || curSubjectName || 'Unknown Subject';
-      student.subjects.push({ name: subjectName, rank, total });
-      pendingSubjectName = null;
       continue;
     }
 
-    // Detect name: proper case 2-4 words
-    const nameMatch = line.match(nameRe);
-    if (nameMatch) {
-      const words = line.split(/\s+/);
-      const isSkip = words.some(w => skipWords.has(w));
-      if (!isSkip && words.length >= 2 && words.length <= 5) {
-        // Could be a student name OR a subject name
-        // We'll treat it as a name candidate; if we see it's followed eventually by
-        // a rank before another name, it was a student name, else treat as subject
-        // Simple heuristic: if we haven't set a student name yet, or previous student
-        // already has subjects, treat as new student name
-        const lastStudent = students2[students2.length - 1];
-        const isNewStudent = !lastStudent || lastStudent.subjects.length > 0;
-        if (isNewStudent) {
-          curStudentName = line;
-          pendingSubjectName = null;
-        } else {
-          // Likely a subject name
-          pendingSubjectName = line;
-        }
-        continue;
-      }
-    }
-
-    // Detect subject headings (all-cap-start lines that look like subject names)
-    // Could be on the same line as other text, so look for subject-like content
-    if (/^[A-Z][a-zA-Z\s\/&'\-]{3,50}$/.test(line) && !rankMatch) {
-      const words = line.split(/\s+/);
-      if (words.length >= 1 && words.length <= 6 && !skipWords.has(words[0])) {
-        pendingSubjectName = line;
-      }
+    // ── Subject line ──
+    // Matches "Subject Name - HSC 12XYZ ..." or "Subject Name - 12XYZ ..."
+    const subMatch = line.match(subjectRe);
+    if (subMatch) {
+      pendingSubject = subMatch[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/, '').trim();
+      continue;
     }
   }
 
   // Collect all unique subjects
   const subjectSet = new Set();
-  students2.forEach(s => s.subjects.forEach(sub => subjectSet.add(sub.name)));
+  students.forEach(s => s.subjects.forEach(sub => subjectSet.add(sub.name)));
   const allSubjects = [...subjectSet].sort();
 
-  return { students: students2, allSubjects };
+  return { students, allSubjects };
 }
 
 // ─── Render ───────────────────────────────────────────────────────────────────
