@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Report Analyser</title>
+<title>RankForge</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap');
@@ -37,53 +37,124 @@
     opacity: 0.5;
   }
 
+  /* ── Masthead ── */
   .masthead {
     border-bottom: 2px solid var(--ink);
     padding-bottom: 1rem;
     margin-bottom: 2rem;
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     gap: 1.5rem;
     flex-wrap: wrap;
   }
 
-  .masthead h1 {
+  .masthead-text h1 {
     font-family: 'DM Serif Display', serif;
     font-size: clamp(2rem, 5vw, 3.5rem);
     line-height: 1;
     letter-spacing: -0.02em;
   }
 
-  .masthead h1 em { font-style: italic; color: var(--accent); }
+  .masthead-text h1 em { font-style: italic; color: var(--accent); }
 
-  .masthead .tagline {
+  .masthead-text .tagline {
     font-size: 0.7rem;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--muted);
-    border-left: 1px solid var(--border);
-    padding-left: 1.5rem;
+    margin-top: 0.3rem;
   }
 
+  /* ── Instructions ── */
+  .instructions {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.75rem;
+    line-height: 1.8;
+    color: var(--ink);
+  }
+
+  .instructions strong {
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .instructions .step {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.2rem;
+    align-items: baseline;
+  }
+
+  .instructions .step-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    color: var(--accent);
+    flex-shrink: 0;
+    width: 1rem;
+  }
+
+  .instructions summary {
+    cursor: pointer;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .instructions summary::before {
+    content: '▶';
+    font-size: 0.5rem;
+    transition: transform 0.2s;
+  }
+
+  .instructions[open] summary::before { transform: rotate(90deg); }
+
+  .instructions .steps-body { margin-top: 0.75rem; }
+
+  /* ── Settings ── */
   .settings {
     background: var(--cream);
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.75rem 1.5rem;
-    align-items: center;
   }
 
-  .settings label {
+  .settings-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.9rem 1.5rem;
+    align-items: start;
+  }
+
+  .setting-label-group { display: flex; flex-direction: column; gap: 0.2rem; padding-top: 0.45rem; }
+
+  .setting-label-group label {
     font-size: 0.7rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink);
+    font-weight: 500;
     white-space: nowrap;
   }
+
+  .setting-label-group .hint {
+    font-size: 0.65rem;
+    color: var(--muted);
+    line-height: 1.4;
+    max-width: 30ch;
+  }
+
+  .setting-control { display: flex; flex-direction: column; gap: 0.2rem; }
 
   .settings input[type="text"],
   .settings select {
@@ -95,7 +166,7 @@
     padding: 0.4rem 0.6rem;
     color: var(--ink);
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
   }
 
   .settings input[type="text"]:focus,
@@ -104,6 +175,7 @@
     border-color: var(--accent);
   }
 
+  /* ── Upload ── */
   .upload-zone {
     border: 2px dashed var(--border);
     background: var(--cream);
@@ -116,18 +188,10 @@
     margin-bottom: 1.5rem;
   }
 
-  .upload-zone:hover, .upload-zone.drag-over {
-    border-color: var(--accent);
-    background: #f0e8d8;
-  }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: #f0e8d8; }
 
   .upload-zone input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
   }
 
   .upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
@@ -140,6 +204,7 @@
 
   .upload-zone p { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.05em; }
 
+  /* ── Status / progress ── */
   #status {
     font-size: 0.75rem;
     letter-spacing: 0.08em;
@@ -155,38 +220,77 @@
   .progress-bar.visible { display: block; }
   .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
 
+  /* ── Results ── */
   .results { display: none; }
   .results.visible { display: block; }
 
-  .section-header {
+  /* ── Collapsible section ── */
+  .collapsible-section { margin-bottom: 1.5rem; }
+
+  .collapsible-header {
     display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    margin: 2.5rem 0 1rem;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0.5rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    user-select: none;
+    margin-top: 2rem;
   }
 
-  .section-header h2 { font-family: 'DM Serif Display', serif; font-size: 1.6rem; }
-  .section-header .count { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .collapsible-header.collapsed { border-radius: 4px; }
 
-  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 2rem; }
+  .collapsible-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    flex: 1;
+  }
+
+  .collapsible-header .count {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.55);
+  }
+
+  .collapse-toggle {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.6);
+    border: 1px solid rgba(245,240,232,0.25);
+    border-radius: 2px;
+    padding: 0.2rem 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .collapsible-body { display: block; }
+  .collapsible-body.hidden { display: none; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-top: none; border-radius: 0 0 4px 4px; margin-bottom: 0; }
 
   table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
 
-  thead tr { background: var(--ink); color: var(--paper); }
+  thead tr { background: #2e2b26; color: var(--paper); }
 
   thead th {
-    padding: 0.6rem 0.9rem;
+    padding: 0.55rem 0.9rem;
     text-align: left;
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     white-space: nowrap;
   }
 
   thead th.center { text-align: center; }
+
+  /* Hidden column styles */
+  .col-subjects-list { }
+  .col-subjects-list.hide { display: none; }
 
   tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
@@ -197,6 +301,7 @@
   td { padding: 0.55rem 0.9rem; vertical-align: middle; }
   td.name { font-family: 'DM Serif Display', serif; font-size: 0.95rem; white-space: nowrap; }
   td.center { text-align: center; font-variant-numeric: tabular-nums; }
+  td.subjects-list-cell { font-size: 0.68rem; color: var(--muted); max-width: 260px; line-height: 1.5; }
 
   .pill {
     display: inline-block;
@@ -227,6 +332,40 @@
   .position-badge.p2 { background: #d8d8d8; border-color: #aaa; color: #333; }
   .position-badge.p3 { background: #e8c498; border-color: #c09060; color: #5a3010; }
 
+  /* ── Table toolbar ── */
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: #f0ece2;
+    border: 1px solid var(--border);
+    border-top: none;
+    font-size: 0.68rem;
+    flex-wrap: wrap;
+  }
+
+  .toggle-subjects-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    background: var(--paper);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .toggle-subjects-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .toggle-subjects-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* ── Action buttons ── */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -249,9 +388,10 @@
 
   .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 
-  details { margin-top: 2rem; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
-  summary { padding: 0.6rem 1rem; cursor: pointer; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--cream); user-select: none; }
-  details pre { padding: 1rem; font-size: 0.7rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto; background: #fff; }
+  /* ── Debug ── */
+  details.debug { margin-top: 2.5rem; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  details.debug summary { padding: 0.6rem 1rem; cursor: pointer; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--cream); user-select: none; }
+  details.debug pre { padding: 1rem; font-size: 0.7rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow-y: auto; background: #fff; }
 
   footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-align: center; }
 </style>
@@ -259,25 +399,55 @@
 <body>
 
 <div class="masthead">
-  <h1>Report<br><em>Analyser</em></h1>
-  <p class="tagline">Upload · Parse · Rank<br>All processing in your browser</p>
+  <div class="masthead-text">
+    <h1>Rank<em>Forge</em></h1>
+    <p class="tagline">Parse · Rank · Compare</p>
+  </div>
 </div>
 
+<!-- ── How to get your PDF ── -->
+<details class="instructions">
+  <summary>How to generate the PDF from Sentral</summary>
+  <div class="steps-body">
+    <div class="step"><span class="step-num">1</span><span>Log in to Sentral and navigate to <strong>Academic Reports</strong>.</span></div>
+    <div class="step"><span class="step-num">2</span><span>Select <strong>Summary Report</strong> from the report type options.</span></div>
+    <div class="step"><span class="step-num">3</span><span>Set the year group to the cohort you want to analyse (e.g. Year 12).</span></div>
+    <div class="step"><span class="step-num">4</span><span>Under grouping options, select <strong>Group by Student</strong>.</span></div>
+    <div class="step"><span class="step-num">5</span><span>Generate and download the PDF, then upload it below.</span></div>
+  </div>
+</details>
+
+<!-- ── Settings ── -->
 <div class="settings">
-  <label for="yearSelect">Year Group</label>
-  <select id="yearSelect">
-    <option value="7">Year 7</option>
-    <option value="8">Year 8</option>
-    <option value="9">Year 9</option>
-    <option value="10">Year 10</option>
-    <option value="11">Year 11</option>
-    <option value="12" selected>Year 12</option>
-  </select>
+  <div class="settings-grid">
 
-  <label for="rankKey">Rank search key</label>
-  <input type="text" id="rankKey" value="Overall Assessment Rank" placeholder="e.g. Overall Assessment Rank" />
+    <div class="setting-label-group">
+      <label for="yearSelect">Year Group</label>
+      <span class="hint">Sets which class codes to recognise. Each subject line contains a code like 12MXX1 — selecting Year 12 tells the parser to look for codes starting with 12.</span>
+    </div>
+    <div class="setting-control">
+      <select id="yearSelect">
+        <option value="7">Year 7</option>
+        <option value="8">Year 8</option>
+        <option value="9">Year 9</option>
+        <option value="10">Year 10</option>
+        <option value="11">Year 11</option>
+        <option value="12" selected>Year 12</option>
+      </select>
+    </div>
+
+    <div class="setting-label-group">
+      <label for="rankKey">Rank search key</label>
+      <span class="hint">The text that appears just before the X/Y rank in the PDF. RankForge scans each line for this phrase and extracts the number that follows it. Change this if your reports use different wording.</span>
+    </div>
+    <div class="setting-control">
+      <input type="text" id="rankKey" value="Overall Assessment Rank" placeholder="e.g. Overall Assessment Rank" />
+    </div>
+
+  </div>
 </div>
 
+<!-- ── Upload ── -->
 <div class="upload-zone" id="uploadZone">
   <input type="file" id="fileInput" accept=".pdf" />
   <span class="upload-icon">📄</span>
@@ -288,38 +458,62 @@
 <div id="status"></div>
 <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
 
+<!-- ── Results ── -->
 <div class="results" id="results">
+
   <div class="actions">
     <button class="btn" onclick="exportCSV('ranks')">⬇ Export ranks CSV</button>
     <button class="btn" onclick="exportCSV('best')">⬇ Export leaderboard CSV</button>
     <button class="btn secondary" onclick="resetTool()">↺ Load another PDF</button>
   </div>
 
-  <div class="section-header">
-    <h2>Subject Ranks by Student</h2>
-    <span class="count" id="rankCount"></span>
+  <!-- Table 1 -->
+  <div class="collapsible-section">
+    <div class="collapsible-header" id="header1" onclick="toggleSection('body1','header1','toggle1')">
+      <h2>Subject Ranks by Student</h2>
+      <span class="count" id="rankCount"></span>
+      <span class="collapse-toggle" id="toggle1">collapse ▲</span>
+    </div>
+    <div class="collapsible-body" id="body1">
+      <div class="table-toolbar">
+        <button class="toggle-subjects-btn" id="subjectsToggle1" onclick="toggleSubjectsList(1)">☰ Show subject list column</button>
+      </div>
+      <div class="table-wrap"><table id="rankTable"></table></div>
+    </div>
   </div>
-  <div class="table-wrap"><table id="rankTable"></table></div>
 
-  <div class="section-header">
-    <h2>Overall Leaderboard</h2>
-    <span class="count" id="boardCount"></span>
+  <!-- Table 2 -->
+  <div class="collapsible-section">
+    <div class="collapsible-header" id="header2" onclick="toggleSection('body2','header2','toggle2')">
+      <h2>Overall Leaderboard</h2>
+      <span class="count" id="boardCount"></span>
+      <span class="collapse-toggle" id="toggle2">collapse ▲</span>
+    </div>
+    <div class="collapsible-body" id="body2">
+      <div class="table-toolbar">
+        <button class="toggle-subjects-btn" id="subjectsToggle2" onclick="toggleSubjectsList(2)">☰ Show subject list column</button>
+      </div>
+      <div class="table-wrap"><table id="leaderTable"></table></div>
+    </div>
   </div>
-  <div class="table-wrap"><table id="leaderTable"></table></div>
 
-  <details>
+  <details class="debug">
     <summary>🔍 Debug — raw extracted text</summary>
     <pre id="rawText"></pre>
   </details>
+
 </div>
 
-<footer>Report Analyser &mdash; Client-side only &mdash; PDF.js &mdash; No data transmitted</footer>
+<footer>RankForge &mdash; Client-side only &mdash; PDF.js &mdash; No data transmitted</footer>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 let parsedData = null;
+// Track subject list column visibility per table
+const subjectsVisible = { 1: false, 2: false };
 
+// ─── Upload ───────────────────────────────────────────────────────────────────
 const zone = document.getElementById('uploadZone');
 const fileInput = document.getElementById('fileInput');
 
@@ -348,6 +542,32 @@ function setProgress(pct) {
   fill.style.width = pct + '%';
 }
 
+// ─── Collapsible sections ─────────────────────────────────────────────────────
+function toggleSection(bodyId, headerId, toggleId) {
+  const body = document.getElementById(bodyId);
+  const header = document.getElementById(headerId);
+  const toggle = document.getElementById(toggleId);
+  const isCollapsed = body.classList.contains('hidden');
+  body.classList.toggle('hidden');
+  header.classList.toggle('collapsed', !isCollapsed);
+  toggle.textContent = isCollapsed ? 'collapse ▲' : 'expand ▼';
+}
+
+// ─── Subject list column toggle ───────────────────────────────────────────────
+function toggleSubjectsList(tableNum) {
+  subjectsVisible[tableNum] = !subjectsVisible[tableNum];
+  const visible = subjectsVisible[tableNum];
+  const btn = document.getElementById(`subjectsToggle${tableNum}`);
+  btn.textContent = visible ? '☰ Hide subject list column' : '☰ Show subject list column';
+  btn.classList.toggle('active', visible);
+  const tableId = tableNum === 1 ? 'rankTable' : 'leaderTable';
+  const table = document.getElementById(tableId);
+  table.querySelectorAll('.col-subjects-list').forEach(el => {
+    el.classList.toggle('hide', !visible);
+  });
+}
+
+// ─── PDF extraction ───────────────────────────────────────────────────────────
 async function handleFile(file) {
   setStatus('Loading PDF…');
   setProgress(5);
@@ -400,6 +620,14 @@ async function handleFile(file) {
     return;
   }
 
+  // Reset subject list toggles
+  subjectsVisible[1] = false;
+  subjectsVisible[2] = false;
+  document.getElementById('subjectsToggle1').classList.remove('active');
+  document.getElementById('subjectsToggle2').classList.remove('active');
+  document.getElementById('subjectsToggle1').textContent = '☰ Show subject list column';
+  document.getElementById('subjectsToggle2').textContent = '☰ Show subject list column';
+
   renderTables(parsedData);
   setProgress(null);
   setStatus(`✓ Found ${parsedData.students.length} students across ${parsedData.allSubjects.length} subjects.`, 'success');
@@ -407,18 +635,15 @@ async function handleFile(file) {
   document.getElementById('uploadZone').style.display = 'none';
 }
 
+// ─── Parser ───────────────────────────────────────────────────────────────────
 function parseText(text, year, rankKey) {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-  // "SMITH, John Semester 2, 2025 - 12-1 - 12"
   const studentRe = /^([A-Z][A-Z'\-]+(?:\s+[A-Z][A-Z'\-]+)*,\s+[A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]*)*)\s+Semester\b/;
 
-  // Subject: everything before a class code that starts with the selected year number
-  // e.g. Year 12 → matches "12MXX1", Year 7 → matches "7ENG1"
   const escapedYear = year.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const subjectRe = new RegExp(`^(.+?)(?:\\s+-\\s+(?:HSC|Preliminary)?)?\\s+${escapedYear}[A-Z]{2,}[\\dA-Z]*`);
 
-  // Rank line using user-supplied key
   const escapedKey = rankKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const rankRe = new RegExp(`${escapedKey}[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`, 'i');
 
@@ -430,7 +655,6 @@ function parseText(text, year, rankKey) {
     const line = lines[i];
     if (line.includes('--- PAGE BREAK ---')) continue;
 
-    // New student
     const studentMatch = line.match(studentRe);
     if (studentMatch) {
       curStudent = { name: studentMatch[1].trim(), subjects: [] };
@@ -441,7 +665,6 @@ function parseText(text, year, rankKey) {
 
     if (!curStudent) continue;
 
-    // Rank line
     const rankMatch = line.match(rankRe);
     if (rankMatch) {
       const rank = parseInt(rankMatch[1]);
@@ -453,7 +676,6 @@ function parseText(text, year, rankKey) {
       continue;
     }
 
-    // Subject line
     const subMatch = line.match(subjectRe);
     if (subMatch) {
       pendingSubject = subMatch[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/, '').trim();
@@ -468,19 +690,28 @@ function parseText(text, year, rankKey) {
   return { students, allSubjects };
 }
 
+// ─── Render ───────────────────────────────────────────────────────────────────
 function renderTables({ students, allSubjects }) {
-  // Table 1
+
+  // ── Table 1 ──
   const rankTable = document.getElementById('rankTable');
   document.getElementById('rankCount').textContent = `${students.length} students · ${allSubjects.length} subjects`;
 
-  let html = '<thead><tr><th>Student</th><th class="center">Subjects</th>';
+  let html = `<thead><tr>
+    <th>Student</th>
+    <th class="center col-subjects-list hide">Subjects</th>
+    <th class="center">Subjects Found</th>`;
   allSubjects.forEach(s => { html += `<th class="center">${s}</th>`; });
   html += '</tr></thead><tbody>';
 
   students.forEach(student => {
     const subMap = {};
     student.subjects.forEach(s => { subMap[s.name] = s; });
-    html += `<tr><td class="name">${student.name}</td><td class="center">${student.subjects.length}</td>`;
+    const subjectListStr = student.subjects.map(s => s.name).join(', ');
+    html += `<tr>
+      <td class="name">${student.name}</td>
+      <td class="subjects-list-cell col-subjects-list hide">${subjectListStr || '—'}</td>
+      <td class="center">${student.subjects.length}</td>`;
     allSubjects.forEach(subj => {
       const s = subMap[subj];
       if (!s) {
@@ -496,7 +727,7 @@ function renderTables({ students, allSubjects }) {
   html += '</tbody>';
   rankTable.innerHTML = html;
 
-  // Table 2
+  // ── Table 2 ──
   const leaderTable = document.getElementById('leaderTable');
 
   const withStats = students.map(student => {
@@ -510,7 +741,8 @@ function renderTables({ students, allSubjects }) {
   let html2 = `<thead><tr>
     <th class="center">Position</th>
     <th>Student</th>
-    <th class="center">Subjects</th>
+    <th class="center col-subjects-list hide">Subjects</th>
+    <th class="center">Subjects Found</th>
     <th class="center">Avg Rank</th>`;
   allSubjects.forEach(s => { html2 += `<th class="center">${s}</th>`; });
   html2 += '</tr></thead><tbody>';
@@ -522,10 +754,12 @@ function renderTables({ students, allSubjects }) {
     const rowClass = pos === 1 ? 'gold' : '';
     const subMap = {};
     student.subjects.forEach(s => { subMap[s.name] = s; });
+    const subjectListStr = student.subjects.map(s => s.name).join(', ');
 
     html2 += `<tr class="${rowClass}">
       <td class="center"><span class="position-badge ${posClass}">${medal || pos}</span></td>
       <td class="name">${student.name}</td>
+      <td class="subjects-list-cell col-subjects-list hide">${subjectListStr || '—'}</td>
       <td class="center">${student.subjects.length}</td>
       <td class="center" style="font-weight:500">${student.avg ? student.avg.toFixed(2) : '—'}</td>`;
 
@@ -545,6 +779,7 @@ function renderTables({ students, allSubjects }) {
   leaderTable.innerHTML = html2;
 }
 
+// ─── CSV Export ───────────────────────────────────────────────────────────────
 function exportCSV(which) {
   if (!parsedData) return;
   const { students, allSubjects } = parsedData;
@@ -552,12 +787,13 @@ function exportCSV(which) {
   let rows = [];
 
   if (which === 'ranks') {
-    rows.push(['Student', 'Subjects Found', ...allSubjects]);
+    rows.push(['Student', 'Subjects', 'Subjects Found', ...allSubjects]);
     students.forEach(student => {
       const subMap = {};
       student.subjects.forEach(s => { subMap[s.name] = s; });
       rows.push([
         student.name,
+        student.subjects.map(s => s.name).join('; '),
         student.subjects.length,
         ...allSubjects.map(subj => { const s = subMap[subj]; return s ? `${s.rank}/${s.total}` : ''; })
       ]);
@@ -569,13 +805,14 @@ function exportCSV(which) {
       return { ...student, avg };
     }).sort((a, b) => (a.avg ?? Infinity) - (b.avg ?? Infinity));
 
-    rows.push(['Position', 'Student', 'Subjects Found', 'Avg Rank', ...allSubjects]);
+    rows.push(['Position', 'Student', 'Subjects', 'Subjects Found', 'Avg Rank', ...allSubjects]);
     withStats.forEach((student, idx) => {
       const subMap = {};
       student.subjects.forEach(s => { subMap[s.name] = s; });
       rows.push([
         idx + 1,
         student.name,
+        student.subjects.map(s => s.name).join('; '),
         student.subjects.length,
         student.avg ? student.avg.toFixed(2) : '',
         ...allSubjects.map(subj => { const s = subMap[subj]; return s ? `${s.rank}/${s.total}` : ''; })
@@ -588,11 +825,12 @@ function exportCSV(which) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `year${year}-${which}.csv`;
+  a.download = `rankforge-year${year}-${which}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
+// ─── Reset ────────────────────────────────────────────────────────────────────
 function resetTool() {
   parsedData = null;
   document.getElementById('results').classList.remove('visible');
@@ -600,6 +838,11 @@ function resetTool() {
   document.getElementById('fileInput').value = '';
   setStatus('');
   setProgress(null);
+  // Re-expand sections for next use
+  ['body1','body2'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+  ['header1','header2'].forEach(id => document.getElementById(id).classList.remove('collapsed'));
+  document.getElementById('toggle1').textContent = 'collapse ▲';
+  document.getElementById('toggle2').textContent = 'collapse ▲';
 }
 </script>
 </body>
