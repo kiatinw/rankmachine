@@ -212,11 +212,14 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
       </select>
     </div>
     <div class="setting-label-group">
-      <label for="rankKey" id="rankKeyLabel">Rank search key</label>
-      <span class="hint">The text just before the score in the PDF.</span>
+      <label id="rankKeyLabel">Score search keys</label>
+      <span class="hint">All non-empty keys are checked on every line. Add extras for subjects that use different wording.</span>
     </div>
-    <div class="setting-control">
-      <input type="text" id="rankKey" value="Overall Assessment Rank" placeholder="e.g. Overall Assessment Rank"/>
+    <div class="setting-control" style="gap:.4rem">
+      <input type="text" id="rankKey"  value="Overall Assessment Rank" placeholder="Key 1"/>
+      <input type="text" id="rankKey2" value="" placeholder="Key 2 (optional)"/>
+      <input type="text" id="rankKey3" value="" placeholder="Key 3 (optional)"/>
+      <input type="text" id="rankKey4" value="" placeholder="Key 4 (optional)"/>
     </div>
   </div>
 </div>
@@ -326,9 +329,9 @@ function setProgress(p){const b=document.getElementById('progressBar'),f=documen
 
 function onScoreModeChange(){
   const p=document.getElementById('scoreMode').value==='percent';
-  document.getElementById('rankKeyLabel').textContent=p?'Mark search key':'Rank search key';
+  document.getElementById('rankKeyLabel').textContent=p?'Score search keys':'Score search keys';
   const inp=document.getElementById('rankKey');
-  inp.placeholder=p?'e.g. Assessment Mark':'e.g. Overall Assessment Rank';
+  inp.placeholder=p?'Key 1 (e.g. Assessment Mark)':'Key 1 (e.g. Overall Assessment Rank)';
   if(p&&inp.value==='Overall Assessment Rank')inp.value='Assessment Mark';
   if(!p&&inp.value==='Assessment Mark')inp.value='Overall Assessment Rank';
 }
@@ -357,9 +360,11 @@ async function handleFile(file){
   document.getElementById('rawText').textContent=full;
   setProgress(70);setStatus('Parsing…');
   const yr=document.getElementById('yearSelect').value;
-  const key=document.getElementById('rankKey').value.trim()||'Overall Assessment Rank';
+  const keys=['rankKey','rankKey2','rankKey3','rankKey4']
+    .map(id=>document.getElementById(id).value.trim()).filter(Boolean);
+  if(!keys.length)keys.push('Overall Assessment Rank');
   const mode=document.getElementById('scoreMode').value;
-  parsedData=parseText(full,yr,key,mode);
+  parsedData=parseText(full,yr,keys,mode);
   setProgress(90);
   if(!parsedData.students.length){setStatus('No student data found. Check the debug panel.','error');document.getElementById('results').classList.add('visible');setProgress(null);return}
 
@@ -387,20 +392,21 @@ async function handleFile(file){
 // ── Parser ─────────────────────────────────────────────────────────────────────
 // Class code: 1-2 digit year number + 2+ letters + alphanumeric tail
 // This is the key fix: match \b\d{1,2}[A-Z]{2,}[\dA-Z]* at WORD boundary so SIT10216 doesn't match
-function parseText(text,year,rankKey,scoreMode){
+function parseText(text,year,rankKeys,scoreMode){
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   const studentRe=/^([A-Z][A-Z'\-]+(?:\s+[A-Z][A-Z'\-]+)*,\s+[A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]*)*)\s+Semester\b/;
 
-  // Class code pattern: year digits at start of a word, followed by letters then alphanums
-  // e.g. 12MXX1, 10MMA1, 7ENG1, 10THO1
-  // We require it to be preceded by a space (or start) so SIT10216 won't match
   const ey=year.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  // subject name = everything before the class code token
   const subjectCodeRe=new RegExp(`^(.*?)\\s+(${ey}[A-Z]{2,}[\\dA-Z]*)(?:\\s|$)`);
 
-  const ek=rankKey.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const rankRe=new RegExp(`${ek}[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`,'i');
-  const pctRe=new RegExp(`${ek}[:\\s]+(\\d+(?:\\.\\d+)?)\\s*%`,'i');
+  // One regex per key; first match on a line wins
+  function makeRe(key,pattern){
+    const ek=key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return new RegExp(`${ek}${pattern}`,'i');
+  }
+  const rankRes=rankKeys.map(k=>makeRe(k,`[:\\s]+(\\d+)\\s*\\/\\s*(\\d+)`));
+  const pctRes =rankKeys.map(k=>makeRe(k,`[:\\s]+(\\d+(?:\\.\\d+)?)\\s*%`));
+  function matchAny(res,line){for(const re of res){const m=line.match(re);if(m)return m;}return null;}
 
   // G&T: class code ends with T, X, TR, or TG (before optional trailing digits)
   // Only relevant for years 7-10
@@ -423,7 +429,7 @@ function parseText(text,year,rankKey,scoreMode){
     if(!cur)continue;
 
     if(scoreMode==='percent'){
-      const pm=line.match(pctRe);
+      const pm=matchAny(pctRes,line);
       if(pm&&pendName){
         const isGT=juniorYear&&pendCode?gtCodeRe.test(pendCode):false;
         const effName=isGT?pendName+' (G&T)':pendName;
@@ -433,7 +439,7 @@ function parseText(text,year,rankKey,scoreMode){
         pendName=null;pendCode=null;continue;
       }
     } else {
-      const rm=line.match(rankRe);
+      const rm=matchAny(rankRes,line);
       if(rm&&pendName){
         const isGT=juniorYear&&pendCode?gtCodeRe.test(pendCode):false;
         const effName=isGT?pendName+' (G&T)':pendName;
@@ -481,31 +487,33 @@ function computeZScores(students,subjects){
 }
 
 // ── Maths group resolution ─────────────────────────────────────────────────────
+// Returns the group name for this code, or null if unassigned
 function resolvedMathsName(studentMathsCode){
   if(!studentMathsCode)return null;
   const grp=mathsGroups.find(g=>g.codes.includes(studentMathsCode));
-  if(grp)return'Maths: '+grp.name;
-  return'Maths: Unassigned ('+studentMathsCode+')';
+  return grp?'Maths: '+grp.name:null;  // null = unassigned, will show — in table
 }
 
-// Effective subjects: allSubjects + resolved maths group names
-function getEffectiveSubjects(workingStudents){
+// Effective subjects: allSubjects + group names only for groups that have ≥1 code
+function getEffectiveSubjects(){
   const base=parsedData.allSubjects.slice();
   const mathsNames=new Set();
   if(isJunior()&&parsedData.mathsCodes.size){
-    workingStudents.forEach(st=>{if(st.mathsCode)mathsNames.add(resolvedMathsName(st.mathsCode))});
+    // Only emit group names for groups that actually have codes assigned
+    mathsGroups.forEach(g=>{if(g.codes.length)mathsNames.add('Maths: '+g.name)});
   }
   return [...base,...[...mathsNames].sort()];
 }
 
 // Per-student map: effectiveSubjectName -> subject entry
+// Unassigned maths students get no maths entry (shows — in table)
 function buildSubMap(st){
   const m={};
   st.subjects.forEach(s=>{
     const isMaths=parsedData.mathsCodes.size&&s.code&&/MMA/i.test(s.code);
     if(isJunior()&&isMaths){
       const mn=resolvedMathsName(st.mathsCode);
-      if(mn)m[mn]=s;
+      if(mn)m[mn]=s;  // only add if assigned to a group
     } else {
       m[s.name]=s;
     }
@@ -533,9 +541,7 @@ function buildPenaltyPanel(){
   document.getElementById('penaltyPanel').style.display=show?'':'none';
   if(!show)return;
 
-  let ws=parsedData.students;
-  if(isPercent)ws=computeZScores(parsedData.students,parsedData.allSubjects);
-  const effSubjects=getEffectiveSubjects(ws);
+  const effSubjects=getEffectiveSubjects();
 
   let html='';
 
@@ -552,6 +558,7 @@ function buildPenaltyPanel(){
     </div>`;
 
     const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
+    // Regular = non-GT subjects + assigned maths group names
     const reg=effSubjects.filter(s=>!isGT(s));
     const gt=effSubjects.filter(s=>isGT(s));
 
@@ -586,13 +593,13 @@ function buildPenaltyPanel(){
     html+=`<div class="penalty-section-label" style="margin-top:${isPercent?'1.5rem':'0'}">Maths class grouping</div>
     <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">
       Drag maths class codes into groups. Each group becomes a separate course column that can be weighted independently.
-      <strong>Click a group name to rename it inline.</strong> Students with unassigned codes will show their raw class code.
+      <strong>Click a group name to rename it inline.</strong> Students whose maths code isn't assigned to a group will show <em>—</em> in the maths column until assigned.
     </p>
     <div class="maths-group-controls">
       <button class="add-group-btn" onclick="addMathsGroup()">+ Add group</button>
     </div>
     <div class="maths-groups-container" id="mathsGroupsContainer"></div>
-    <button class="penalty-apply-btn" style="margin-top:.75rem" onclick="renderTables()">Apply grouping &amp; re-render</button>`;
+    <button class="penalty-apply-btn" style="margin-top:.75rem" onclick="buildPenaltyPanel();renderTables()">Apply grouping &amp; re-render</button>`;
   }
 
   document.getElementById('penaltyBody').innerHTML=html;
@@ -639,7 +646,7 @@ function doApplyAllGT(){
   // rebuild grid only
   const grid=document.getElementById('gtPenaltyGrid');
   if(grid){
-    const gtSubjects=getEffectiveSubjects(parsedData.students).filter(s=>isGT(s));
+    const gtSubjects=getEffectiveSubjects().filter(s=>isGT(s));
     grid.innerHTML=gtSubjects.map(s=>penaltyRowHTML(s,true)).join('');
   }
   document.getElementById('applyAllGTRow').style.display='none';
@@ -745,7 +752,7 @@ function renderTables(){
   const {students,allSubjects,scoreMode}=parsedData;
   const isPercent=scoreMode==='percent';
   let ws=isPercent?computeZScores(students,allSubjects):students;
-  const effSubjects=getEffectiveSubjects(ws);
+  const effSubjects=getEffectiveSubjects();
   const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
 
   function pillFor(s,subjName){
@@ -856,7 +863,7 @@ function exportCSV(which){
   const isPercent=scoreMode==='percent';
   const year=document.getElementById('yearSelect').value;
   let ws=isPercent?computeZScores(students,allSubjects):students;
-  const effSubjects=getEffectiveSubjects(ws);
+  const effSubjects=getEffectiveSubjects();
   function scoreStr(s){if(!s)return'';return isPercent?s.score.toFixed(1)+'%':`${s.rank}/${s.total}`}
   const sl=isPercent?'Avg Z-Score':'Avg Rank';
   let rows=[];
