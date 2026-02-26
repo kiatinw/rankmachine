@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Year 12 Report Analyser</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --ink: #1a1814;
+    --paper: #f5f0e8;
+    --cream: #ede7d6;
+    --accent: #c84b2f;
+    --accent2: #2f6bc8;
+    --muted: #8a8278;
+    --gold: #c9a84c;
+    --border: rgba(26,24,20,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.5;
+  }
+
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1rem;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .masthead h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .masthead h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .masthead .tagline {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-left: 1px solid var(--border);
+    padding-left: 1.5rem;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    background: var(--cream);
+    border-radius: 4px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    margin-bottom: 2rem;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: #f0e8d8;
+  }
+
+  .upload-zone input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .upload-zone h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .upload-zone p {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Status bar */
+  #status {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    min-height: 1.2em;
+    text-transform: uppercase;
+  }
+
+  #status.error { color: var(--accent); }
+  #status.success { color: #2a7a3b; }
+
+  /* Progress */
+  .progress-bar {
+    height: 2px;
+    background: var(--cream);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    display: none;
+  }
+  .progress-bar.visible { display: block; }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  /* Results sections */
+  .results { display: none; }
+  .results.visible { display: block; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 2.5rem 0 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
+
+  .section-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+  }
+
+  .section-header .count {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Tables */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 2rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+  }
+
+  thead tr {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  thead th {
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    white-space: nowrap;
+  }
+
+  thead th.rank-col {
+    text-align: center;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--cream); }
+  tbody tr.gold { background: #fdf6e0; }
+  tbody tr.gold:hover { background: #f9efcd; }
+
+  td {
+    padding: 0.55rem 0.9rem;
+    vertical-align: middle;
+  }
+
+  td.name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+
+  td.rank-cell {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  td.rank-cell .pill {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    font-size: 0.72rem;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td.rank-cell .pill.top { background: #d8f0dd; border-color: #9ecba6; color: #1a5c24; }
+  td.rank-cell .pill.bottom { background: #fde8e3; border-color: #e8b0a2; color: #7a2010; }
+  td.rank-cell .pill.missing { color: var(--muted); background: transparent; border-color: transparent; font-style: italic; }
+
+  td.avg {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .medal {
+    font-size: 1rem;
+    margin-right: 0.3rem;
+  }
+
+  .position-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 500;
+    background: var(--cream);
+    border: 1px solid var(--border);
+  }
+
+  .position-badge.p1 { background: #f0d060; border-color: #c9a030; color: #5a3a00; }
+  .position-badge.p2 { background: #d8d8d8; border-color: #aaa; color: #333; }
+  .position-badge.p3 { background: #e8c498; border-color: #c09060; color: #5a3010; }
+
+  /* Export button */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1.2rem;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s, color 0.15s;
+    text-decoration: none;
+  }
+
+  .btn:hover { background: var(--accent); border-color: var(--accent); }
+  .btn.secondary { background: transparent; color: var(--ink); }
+  .btn.secondary:hover { background: var(--ink); color: var(--paper); }
+
+  .actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Debug raw text */
+  details {
+    margin-top: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  summary {
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--cream);
+    user-select: none;
+  }
+
+  details pre {
+    padding: 1rem;
+    font-size: 0.7rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #fff;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <h1>Year 12<br><em>Report Analyser</em></h1>
+  <p class="tagline">Upload · Parse · Rank<br>All processing happens in your browser</p>
+</div>
+
+<div class="upload-zone" id="uploadZone">
+  <input type="file" id="fileInput" accept=".pdf" />
+  <span class="upload-icon">📄</span>
+  <h2>Drop your PDF here</h2>
+  <p>or click to browse — no data leaves your device</p>
+</div>
+
+<div id="status"></div>
+<div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="results" id="results">
+  <div class="actions">
+    <button class="btn" onclick="exportCSV('ranks')">⬇ Export ranks CSV</button>
+    <button class="btn" onclick="exportCSV('best')">⬇ Export leaderboard CSV</button>
+    <button class="btn secondary" onclick="resetTool()">↺ Load another PDF</button>
+  </div>
+
+  <div class="section-header">
+    <h2>Subject Ranks by Student</h2>
+    <span class="count" id="rankCount"></span>
+  </div>
+  <div class="table-wrap"><table id="rankTable"></table></div>
+
+  <div class="section-header">
+    <h2>Overall Leaderboard</h2>
+    <span class="count" id="boardCount"></span>
+  </div>
+  <div class="table-wrap"><table id="leaderTable"></table></div>
+
+  <details>
+    <summary>🔍 Debug — raw extracted text</summary>
+    <pre id="rawText"></pre>
+  </details>
+</div>
+
+<footer>Year 12 Report Analyser &mdash; Client-side only &mdash; PDF.js &mdash; No data transmitted</footer>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let parsedData = null; // { students: [{name, subjects:[{name,rank,total}]}] }
+
+// ─── Upload handling ─────────────────────────────────────────────────────────
+const zone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') handleFile(file);
+  else setStatus('Please drop a PDF file.', 'error');
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function setStatus(msg, type = '') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = type;
+}
+
+function setProgress(pct) {
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  if (pct === null) { bar.classList.remove('visible'); return; }
+  bar.classList.add('visible');
+  fill.style.width = pct + '%';
+}
+
+// ─── PDF extraction ───────────────────────────────────────────────────────────
+async function handleFile(file) {
+  setStatus('Loading PDF…');
+  setProgress(5);
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const totalPages = pdf.numPages;
+
+  let fullText = '';
+  for (let i = 1; i <= totalPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+
+    // Sort items by Y then X so reading order is correct
+    const items = content.items.slice().sort((a, b) => {
+      const dy = b.transform[5] - a.transform[5];
+      return Math.abs(dy) > 3 ? dy : a.transform[4] - b.transform[4];
+    });
+
+    const lines = [];
+    let lastY = null;
+    let line = [];
+    for (const item of items) {
+      const y = Math.round(item.transform[5]);
+      if (lastY !== null && Math.abs(y - lastY) > 3) {
+        if (line.length) lines.push(line.join(' '));
+        line = [];
+      }
+      if (item.str.trim()) line.push(item.str.trim());
+      lastY = y;
+    }
+    if (line.length) lines.push(line.join(' '));
+
+    fullText += lines.join('\n') + '\n--- PAGE BREAK ---\n';
+    setProgress(5 + Math.round((i / totalPages) * 60));
+  }
+
+  document.getElementById('rawText').textContent = fullText;
+  setProgress(70);
+  setStatus('Parsing student data…');
+
+  parsedData = parseText(fullText);
+  setProgress(90);
+
+  if (!parsedData.students.length) {
+    setStatus('No student data found. Check the debug panel below to see extracted text.', 'error');
+    document.getElementById('results').classList.add('visible');
+    setProgress(null);
+    return;
+  }
+
+  renderTables(parsedData);
+  setProgress(null);
+  setStatus(`✓ Found ${parsedData.students.length} students across ${parsedData.allSubjects.length} subjects.`, 'success');
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('uploadZone').style.display = 'none';
+}
+
+// ─── Parser ───────────────────────────────────────────────────────────────────
+function parseText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Regex to match "Overall Assessment Rank: 5/41" or "Overall Assessment Rank:5/41"
+  const rankRe = /Overall\s+Assessment\s+Rank[:\s]+(\d+)\s*\/\s*(\d+)/i;
+
+  // We'll try to detect student blocks.
+  // Heuristic: a student name line is a line that:
+  //   - Is not all-caps label / number
+  //   - Appears before subject data
+  //   - Looks like 2-4 words of proper-case text
+  // We'll scan for rank lines and then look backwards for the nearest name-like heading.
+
+  const students = [];
+  let currentStudent = null;
+  let currentSubject = null;
+
+  // Build a list of (lineIndex, type, data)
+  const events = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const rankMatch = line.match(rankRe);
+    if (rankMatch) {
+      events.push({ i, type: 'rank', rank: parseInt(rankMatch[1]), total: parseInt(rankMatch[2]) });
+    }
+  }
+
+  // Now parse by walking through all lines, tracking context
+  // Strategy: collect runs of lines between "--- PAGE BREAK ---" marks
+  // For each student block, try to find the name as the first "title-like" line
+
+  // Reset and do a linear pass
+  const students2 = [];
+  let curStudentName = null;
+  let curSubjectName = null;
+  let pendingSubjectName = null;
+
+  // Lines that look like a subject heading (e.g. "Mathematics", "English Advanced")
+  // These appear before the rank line for that subject
+  const subjectLineRe = /^[A-Z][a-zA-Z\s\/&\-]+$/;
+  // Name: Proper Case, 2-4 words, no numbers, not a known label
+  const nameRe = /^([A-Z][a-z]+(?:\s+[A-Z][a-z']+){1,4})$/;
+  const skipWords = new Set(['Overall', 'Assessment', 'Rank', 'Subject', 'Student', 'Report', 'Year', 'Semester', 'Term', 'Page', 'Class']);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.includes('--- PAGE BREAK ---')) continue;
+
+    const rankMatch = line.match(rankRe);
+    if (rankMatch) {
+      const rank = parseInt(rankMatch[1]);
+      const total = parseInt(rankMatch[2]);
+      // Find or create student
+      if (!curStudentName) curStudentName = 'Unknown Student ' + (students2.length + 1);
+      let student = students2.find(s => s.name === curStudentName);
+      if (!student) {
+        student = { name: curStudentName, subjects: [] };
+        students2.push(student);
+      }
+      const subjectName = pendingSubjectName || curSubjectName || 'Unknown Subject';
+      student.subjects.push({ name: subjectName, rank, total });
+      pendingSubjectName = null;
+      continue;
+    }
+
+    // Detect name: proper case 2-4 words
+    const nameMatch = line.match(nameRe);
+    if (nameMatch) {
+      const words = line.split(/\s+/);
+      const isSkip = words.some(w => skipWords.has(w));
+      if (!isSkip && words.length >= 2 && words.length <= 5) {
+        // Could be a student name OR a subject name
+        // We'll treat it as a name candidate; if we see it's followed eventually by
+        // a rank before another name, it was a student name, else treat as subject
+        // Simple heuristic: if we haven't set a student name yet, or previous student
+        // already has subjects, treat as new student name
+        const lastStudent = students2[students2.length - 1];
+        const isNewStudent = !lastStudent || lastStudent.subjects.length > 0;
+        if (isNewStudent) {
+          curStudentName = line;
+          pendingSubjectName = null;
+        } else {
+          // Likely a subject name
+          pendingSubjectName = line;
+        }
+        continue;
+      }
+    }
+
+    // Detect subject headings (all-cap-start lines that look like subject names)
+    // Could be on the same line as other text, so look for subject-like content
+    if (/^[A-Z][a-zA-Z\s\/&'\-]{3,50}$/.test(line) && !rankMatch) {
+      const words = line.split(/\s+/);
+      if (words.length >= 1 && words.length <= 6 && !skipWords.has(words[0])) {
+        pendingSubjectName = line;
+      }
+    }
+  }
+
+  // Collect all unique subjects
+  const subjectSet = new Set();
+  students2.forEach(s => s.subjects.forEach(sub => subjectSet.add(sub.name)));
+  const allSubjects = [...subjectSet].sort();
+
+  return { students: students2, allSubjects };
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderTables({ students, allSubjects }) {
+  // ── Table 1: ranks per student ──
+  const rankTable = document.getElementById('rankTable');
+  document.getElementById('rankCount').textContent = `${students.length} students · ${allSubjects.length} subjects`;
+
+  let html = '<thead><tr><th>Student</th>';
+  allSubjects.forEach(s => { html += `<th class="rank-col">${s}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  students.forEach(student => {
+    const subMap = {};
+    student.subjects.forEach(s => { subMap[s.name] = s; });
+    html += `<tr><td class="name">${student.name}</td>`;
+    allSubjects.forEach(subj => {
+      const s = subMap[subj];
+      if (!s) {
+        html += `<td class="rank-cell"><span class="pill missing">—</span></td>`;
+      } else {
+        const pct = s.rank / s.total;
+        const cls = pct <= 0.25 ? 'top' : pct >= 0.75 ? 'bottom' : '';
+        html += `<td class="rank-cell"><span class="pill ${cls}">${s.rank}/${s.total}</span></td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  rankTable.innerHTML = html;
+
+  // ── Table 2: leaderboard ──
+  const leaderTable = document.getElementById('leaderTable');
+
+  // Compute averages
+  const withStats = students.map(student => {
+    const subs = student.subjects;
+    if (!subs.length) return { ...student, avg: null, avgFraction: null };
+    const avgRank = subs.reduce((acc, s) => acc + s.rank, 0) / subs.length;
+    const avgPct = subs.reduce((acc, s) => acc + s.rank / s.total, 0) / subs.length * 100;
+    const avgFraction = `${avgRank.toFixed(1)} / ${(subs.reduce((a, s) => a + s.total, 0) / subs.length).toFixed(0)}`;
+    return { ...student, avg: avgRank, avgFraction, avgPct };
+  }).sort((a, b) => (a.avg ?? Infinity) - (b.avg ?? Infinity));
+
+  document.getElementById('boardCount').textContent = `Sorted by lowest average rank`;
+
+  let html2 = `<thead><tr>
+    <th>Position</th>
+    <th>Student</th>
+    <th class="rank-col">Avg Rank</th>
+    <th class="rank-col">Avg (out of total)</th>`;
+  allSubjects.forEach(s => { html2 += `<th class="rank-col">${s}</th>`; });
+  html2 += '</tr></thead><tbody>';
+
+  withStats.forEach((student, idx) => {
+    const pos = idx + 1;
+    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '';
+    const posClass = pos === 1 ? 'p1' : pos === 2 ? 'p2' : pos === 3 ? 'p3' : '';
+    const rowClass = pos === 1 ? 'gold' : '';
+    const subMap = {};
+    student.subjects.forEach(s => { subMap[s.name] = s; });
+
+    html2 += `<tr class="${rowClass}">
+      <td style="text-align:center"><span class="position-badge ${posClass}">${medal || pos}</span></td>
+      <td class="name">${student.name}</td>
+      <td class="avg" style="text-align:center">${student.avg ? student.avg.toFixed(2) : '—'}</td>
+      <td class="avg" style="text-align:center">${student.avgFraction || '—'}</td>`;
+
+    allSubjects.forEach(subj => {
+      const s = subMap[subj];
+      if (!s) {
+        html2 += `<td class="rank-cell"><span class="pill missing">—</span></td>`;
+      } else {
+        const pct = s.rank / s.total;
+        const cls = pct <= 0.25 ? 'top' : pct >= 0.75 ? 'bottom' : '';
+        html2 += `<td class="rank-cell"><span class="pill ${cls}">${s.rank}/${s.total}</span></td>`;
+      }
+    });
+    html2 += '</tr>';
+  });
+  html2 += '</tbody>';
+  leaderTable.innerHTML = html2;
+}
+
+// ─── CSV Export ───────────────────────────────────────────────────────────────
+function exportCSV(which) {
+  if (!parsedData) return;
+  const { students, allSubjects } = parsedData;
+
+  let rows = [];
+  if (which === 'ranks') {
+    const header = ['Student', ...allSubjects];
+    rows.push(header);
+    students.forEach(student => {
+      const subMap = {};
+      student.subjects.forEach(s => { subMap[s.name] = s; });
+      const row = [student.name, ...allSubjects.map(subj => {
+        const s = subMap[subj];
+        return s ? `${s.rank}/${s.total}` : '';
+      })];
+      rows.push(row);
+    });
+  } else {
+    const withStats = students.map(student => {
+      const subs = student.subjects;
+      const avgRank = subs.length ? subs.reduce((a, s) => a + s.rank, 0) / subs.length : null;
+      const avgTotal = subs.length ? subs.reduce((a, s) => a + s.total, 0) / subs.length : null;
+      return { ...student, avgRank, avgTotal };
+    }).sort((a, b) => (a.avgRank ?? Infinity) - (b.avgRank ?? Infinity));
+
+    const header = ['Position', 'Student', 'Avg Rank', 'Avg Out Of', ...allSubjects];
+    rows.push(header);
+    withStats.forEach((student, idx) => {
+      const subMap = {};
+      student.subjects.forEach(s => { subMap[s.name] = s; });
+      const row = [
+        idx + 1,
+        student.name,
+        student.avgRank ? student.avgRank.toFixed(2) : '',
+        student.avgTotal ? student.avgTotal.toFixed(0) : '',
+        ...allSubjects.map(subj => {
+          const s = subMap[subj];
+          return s ? `${s.rank}/${s.total}` : '';
+        })
+      ];
+      rows.push(row);
+    });
+  }
+
+  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `year12-${which}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Reset ────────────────────────────────────────────────────────────────────
+function resetTool() {
+  parsedData = null;
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('uploadZone').style.display = '';
+  document.getElementById('fileInput').value = '';
+  setStatus('');
+  setProgress(null);
+}
+</script>
+</body>
+</html>
