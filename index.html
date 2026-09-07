@@ -61,6 +61,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .penalty-row input[type=number]:focus{outline:none;border-color:var(--accent)}
 .cat-select{font-family:'DM Mono',monospace;font-size:.7rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:.25rem .3rem;color:var(--ink);cursor:pointer}
 .cat-select:focus{outline:none;border-color:var(--accent)}
+.dummy-row{display:flex;align-items:center;gap:.6rem;padding:.4rem 0;font-size:.72rem}
+.dummy-row select{font-family:'DM Mono',monospace;font-size:.72rem;background:var(--paper);border:1px solid var(--border);border-radius:2px;padding:.3rem .5rem;color:var(--ink);flex:1;max-width:280px}
+.dummy-row select:focus{outline:none;border-color:var(--accent)}
+.dummy-row input[type=number]{font-family:'DM Mono',monospace;font-size:.75rem;width:6rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:.25rem .4rem;color:var(--ink);text-align:right}
+.dummy-row input[type=number]:focus{outline:none;border-color:var(--accent)}
+.dummy-row .dummy-label{color:var(--muted);white-space:nowrap}
+.dummy-remove{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.8rem;padding:.1rem .3rem;line-height:1}
+.dummy-remove:hover{color:var(--accent)}
 .penalty-apply-btn{margin-top:1rem;font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.45rem 1rem;background:var(--ink);color:var(--paper);border:none;border-radius:2px;cursor:pointer;transition:background .15s}
 .penalty-apply-btn:hover{background:var(--accent)}
 
@@ -312,6 +320,7 @@ let mathsUnassigned=[];   // raw class codes not yet placed
 let dragCode=null;        // code string being dragged
 let dragFromZone=null;    // zone id string
 let groupIdSeq=0;
+let dummyStudents={};  // subjectName -> count of extra students added
 const subjectsVisible={1:false,2:false};
 const CAT={easy:0.8,normal:1.0,hard:1.2};
 
@@ -564,7 +573,7 @@ function computeAvg(st,effSubjects,isPercent){
 // ── Build penalty panel ────────────────────────────────────────────────────────
 function buildPenaltyPanel(){
   const isPercent=parsedData.scoreMode==='percent';
-  const show=isPercent||isJunior()&&parsedData.mathsCodes.size;
+  const show=isPercent||(parsedData.allSubjects.length>0)||isJunior()&&parsedData.mathsCodes.size;
   document.getElementById('penaltyPanel').style.display=show?'':'none';
   if(!show)return;
 
@@ -629,8 +638,21 @@ function buildPenaltyPanel(){
     <button class="penalty-apply-btn" style="margin-top:.75rem" onclick="buildPenaltyPanel();renderTables()">Apply grouping &amp; re-render</button>`;
   }
 
+  // ── Dummy students section (rank mode only) ──
+  if(!isPercent){
+    html+=`<div class="penalty-section-label" style="margin-top:0">Dummy students — adjust cohort size</div>
+    <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">
+      Add phantom students to a course to make its cohort size comparable to larger courses.
+      A rank of <strong>1</strong> in a course with 50 dummies added becomes <strong>1&nbsp;→&nbsp;51</strong> and is treated as 51st in a 60-student cohort when computing averages.
+    </p>
+    <div id="dummyRowsContainer"></div>
+    <button class="add-group-btn" style="margin-top:.5rem" onclick="addDummyRow()">+ Add course</button>
+    <button class="penalty-apply-btn" style="margin-top:.75rem;display:block" onclick="applyDummies()">Apply dummies &amp; re-rank</button>`;
+  }
+
   document.getElementById('penaltyBody').innerHTML=html;
   if(isJunior()&&parsedData.mathsCodes.size)renderMathsGroups();
+  if(!isPercent)renderDummyRows();
 }
 
 function penaltyRowHTML(subj,isGT){
@@ -773,6 +795,57 @@ function renameGroup(id,name){
   }
 }
 
+// ── Dummy students ────────────────────────────────────────────────────────────────
+// dummyRows: [{subject, count}] — transient UI state, synced to dummyStudents on apply
+let dummyRows=[];
+
+function renderDummyRows(){
+  const container=document.getElementById('dummyRowsContainer');
+  if(!container)return;
+  const subjects=parsedData?parsedData.allSubjects:[];
+  let html='';
+  dummyRows.forEach((row,i)=>{
+    html+=`<div class="dummy-row">
+      <select onchange="dummyRows[${i}].subject=this.value">
+        <option value="">— select subject —</option>
+        ${subjects.map(s=>`<option value="${s.replace(/"/g,'&quot;')}"${row.subject===s?' selected':''}>${s}</option>`).join('')}
+      </select>
+      <span class="dummy-label">+ </span>
+      <input type="number" min="0" max="9999" step="1" value="${row.count}"
+             onchange="dummyRows[${i}].count=parseInt(this.value)||0"/>
+      <span class="dummy-label"> dummy students</span>
+      <button class="dummy-remove" onclick="removeDummyRow(${i})">✕</button>
+    </div>`;
+  });
+  container.innerHTML=html;
+}
+
+function addDummyRow(){
+  dummyRows.push({subject:'',count:0});
+  renderDummyRows();
+}
+
+function removeDummyRow(i){
+  dummyRows.splice(i,1);
+  renderDummyRows();
+}
+
+function applyDummies(){
+  // Sync dummyRows -> dummyStudents map
+  dummyStudents={};
+  dummyRows.forEach(r=>{
+    if(r.subject&&r.count>0)dummyStudents[r.subject]=(dummyStudents[r.subject]||0)+r.count;
+  });
+  renderTables();
+}
+
+// Get effective rank for a subject entry, adjusted for dummy students
+function adjustedRank(s,subjName){
+  const extra=dummyStudents[subjName]||0;
+  if(!extra)return{rank:s.rank,total:s.total,adjusted:false};
+  return{rank:s.rank+extra,total:s.total+extra,adjusted:true,origRank:s.rank,origTotal:s.total};
+}
+
 // ── Render tables ──────────────────────────────────────────────────────────────
 function renderTables(){
   if(!parsedData)return;
@@ -789,14 +862,20 @@ function renderTables(){
       const cls=s.score>=80?'top':s.score<50?'bottom':'';
       return`<span class="pill ${cls}${gt?' gt-pill':''}">${s.score.toFixed(1)}%</span>`;
     } else {
-      const r=s.rank/s.total;const cls=r<=0.25?'top':r>=0.75?'bottom':'';
-      return`<span class="pill ${cls}${gt?' gt-pill':''}">${s.rank}/${s.total}</span>`;
+      const adj=adjustedRank(s,subjName);
+      const r=adj.rank/adj.total;const cls=r<=0.25?'top':r>=0.75?'bottom':'';
+      const label=adj.adjusted
+        ?`${adj.origRank}&nbsp;→&nbsp;${adj.rank}/${adj.total}`
+        :`${s.rank}/${s.total}`;
+      return`<span class="pill ${cls}${gt?' gt-pill':''}">${label}</span>`;
     }
   }
 
   function thFor(s){
     const gt=isGT(s);
-    return`<th class="center"${gt?' style="border-bottom:2px solid var(--gt-border)"':''}>${eH(s)}${gt?' <span style="font-size:.55rem;color:var(--gt-border)">G&T</span>':''}</th>`;
+    const extra=dummyStudents[s]||0;
+    const dummyTag=(!isPercent&&extra>0)?` <span style="font-size:.55rem;color:var(--muted);font-style:italic">+${extra}</span>`:'';
+    return`<th class="center"${gt?' style="border-bottom:2px solid var(--gt-border)"':''}>${eH(s)}${dummyTag}${gt?' <span style="font-size:.55rem;color:var(--gt-border)">G&T</span>':''}</th>`;
   }
 
   // ── Table 1 ──
@@ -827,7 +906,11 @@ function renderTables(){
         avg=wt>0?ws2/wt:null;
         rawZ=entries.reduce((a,s)=>a+s.z,0)/entries.length;
       } else {
-        avg=entries.reduce((a,s)=>a+s.rank,0)/entries.length;
+        // Use adjusted rank (with dummy students) for leaderboard sorting
+        avg=entries.reduce((a,s)=>{
+          const subj=effSubjects.find(n=>sm[n]===s);
+          return a+adjustedRank(s,subj||s.name).rank;
+        },0)/entries.length;
       }
     }
     return{...st,avg,rawZ,sm};
@@ -891,21 +974,50 @@ function exportCSV(which){
   const year=document.getElementById('yearSelect').value;
   let ws=isPercent?computeZScores(students,allSubjects):students;
   const effSubjects=getEffectiveSubjects();
-  function scoreStr(s){if(!s)return'';return isPercent?s.score.toFixed(1)+'%':`${s.rank}/${s.total}`}
+
+  // Rank mode: output adjusted rank (with dummies) — raw integer to avoid Excel date parsing
+  // Percentage mode: output raw percentage number
+  function scoreVal(s,subjName){
+    if(!s)return'';
+    if(isPercent)return s.score.toFixed(1);
+    // Output only the final adjusted rank integer — no arrow, no X/Y
+    return String(adjustedRank(s,subjName).rank);
+  }
+
+  // Row 2: cohort sizes per subject (blank for non-rank columns)
+  // Only meaningful in rank mode — shows total students in each course
+  function cohortVal(s){
+    if(isPercent)return'';
+    const extra=dummyStudents[s]||0;
+    for(const st of ws){
+      const sm=buildSubMap(st);
+      if(sm[s])return String(sm[s].total+extra);
+    }
+    return'';
+  }
+
   const sl=isPercent?'Avg Z-Score':'Avg Rank';
   let rows=[];
   if(which==='ranks'){
+    // Row 1: headers
     rows.push(['Student','Subjects','Subjects Found',...effSubjects]);
-    ws.forEach(st=>{const sm=buildSubMap(st);rows.push([st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,...effSubjects.map(s=>scoreStr(sm[s]))])});
+    // Row 2: cohort sizes (blank student/subjects cells, then total per subject)
+    rows.push(['Cohort size','','', ...effSubjects.map(s=>cohortVal(s))]);
+    // Row 3+: students
+    ws.forEach(st=>{const sm=buildSubMap(st);rows.push([st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,...effSubjects.map(s=>scoreVal(sm[s],s))])});
   } else {
     const ranked=ws.map(st=>{
       const sm=buildSubMap(st);const entries=effSubjects.map(s=>sm[s]).filter(Boolean);
       let avg=null;
-      if(entries.length){if(isPercent){let ws2=0,wt=0;entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws2+=s.z*w;wt+=w});avg=wt>0?ws2/wt:null}else avg=entries.reduce((a,s)=>a+s.rank,0)/entries.length}
+      if(entries.length){if(isPercent){let ws2=0,wt=0;entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws2+=s.z*w;wt+=w});avg=wt>0?ws2/wt:null}else avg=entries.reduce((a,s)=>{const subj=effSubjects.find(n=>sm[n]===s);return a+adjustedRank(s,subj||s.name).rank;},0)/entries.length}
       return{...st,avg,sm};
     }).sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return-1;return isPercent?b.avg-a.avg:a.avg-b.avg});
+    // Row 1: headers
     rows.push(['Position','Student','Subjects','Subjects Found',sl,...effSubjects]);
-    ranked.forEach((st,i)=>{const sm=st.sm;rows.push([i+1,st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,st.avg!=null?st.avg.toFixed(3):'',...effSubjects.map(s=>scoreStr(sm[s]))])});
+    // Row 2: cohort sizes
+    rows.push(['','Cohort size','','','',...effSubjects.map(s=>cohortVal(s))]);
+    // Row 3+: students
+    ranked.forEach((st,i)=>{const sm=st.sm;rows.push([i+1,st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,st.avg!=null?st.avg.toFixed(3):'',...effSubjects.map(s=>scoreVal(sm[s],s))])});
   }
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
@@ -916,7 +1028,7 @@ function exportCSV(which){
 function reparseFile(){
   if(!lastUploadedFile){setStatus('No file loaded — please upload a PDF first.','error');return;}
   // Reset results but keep settings, then re-run
-  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dummyStudents={};dummyRows=[];
   document.getElementById('results').classList.remove('visible');
   document.getElementById('penaltyPanel').style.display='none';
   document.getElementById('top30Section').style.display='none';
@@ -924,7 +1036,7 @@ function reparseFile(){
 }
 
 function resetTool(){
-  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dragCode=null;lastUploadedFile=null;
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dummyStudents={};dummyRows=[];dragCode=null;lastUploadedFile=null;
   document.getElementById('results').classList.remove('visible');
   document.getElementById('uploadZone').style.display='';
   document.getElementById('fileInput').value='';
