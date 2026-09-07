@@ -234,6 +234,20 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
     </div>
   </div>
 
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFAQ(this)">
+      <span class="faq-q-mark">Q</span>
+      <span class="faq-q-text">What are dummy students and why would I use them?</span>
+      <span class="faq-arrow">▶</span>
+    </div>
+    <div class="faq-answer">
+      <p>In Rank mode, dummy students let you artificially inflate the cohort size of a small course so it compares more fairly with larger ones.</p>
+      <p>For example, if English Studies has only 10 students and Extension English has 61, a student ranked 1st in English Studies would otherwise look equivalent to someone ranked 1st out of 61 — an unfair advantage. Adding 50 dummy students to English Studies means that rank of 1 becomes <strong>1&nbsp;→&nbsp;51 out of 60</strong>, which is treated as 51st when calculating their leaderboard average.</p>
+      <div class="highlight">The arrow notation <code>1 → 51</code> in the table always shows the original rank alongside the adjusted rank so the adjustment is transparent.</div>
+      <p>To use it: open the <strong>Subject Weighting &amp; Maths Grouping</strong> panel after parsing, scroll to <strong>Dummy students</strong>, select a subject from the dropdown, enter the number of phantom students to add, then click <strong>Apply dummies &amp; re-rank</strong>. Use <strong>+ Add course</strong> to adjust multiple subjects at once.</p>
+    </div>
+  </div>
+
 </div>
 
 <!-- Years 7–10 features -->
