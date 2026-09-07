@@ -254,7 +254,7 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
 
   <div class="panel" id="penaltyPanel" style="display:none">
     <div class="panel-header" onclick="togglePanel(this)">
-      <h3>Subject Weighting &amp; Maths Grouping</h3>
+      <h3 id="penaltyPanelTitle">Adjustments</h3>
       <span class="panel-arrow">▶</span>
     </div>
     <div class="panel-body" id="penaltyBody"></div>
@@ -651,6 +651,14 @@ function buildPenaltyPanel(){
   }
 
   document.getElementById('penaltyBody').innerHTML=html;
+  // Set panel title based on active mode
+  const titleEl=document.getElementById('penaltyPanelTitle');
+  if(titleEl){
+    if(isPercent&&isJunior()&&parsedData.mathsCodes.size)titleEl.textContent='Subject Weighting & Maths Grouping';
+    else if(isPercent)titleEl.textContent='Subject Weighting';
+    else if(isJunior()&&parsedData.mathsCodes.size)titleEl.textContent='Maths Grouping & Course Adjustments';
+    else titleEl.textContent='Course Adjustments';
+  }
   if(isJunior()&&parsedData.mathsCodes.size)renderMathsGroups();
   if(!isPercent)renderDummyRows();
 }
@@ -1003,7 +1011,10 @@ function exportCSV(which){
     rows.push(['Student','Subjects','Subjects Found',...effSubjects]);
     // Row 2: cohort sizes (blank student/subjects cells, then total per subject)
     rows.push(['Cohort size','','', ...effSubjects.map(s=>cohortVal(s))]);
-    // Row 3+: students
+    // Row 3: dummy students added (blank if none)
+    const hasDummies=effSubjects.some(s=>dummyStudents[s]>0);
+    if(hasDummies)rows.push(['Dummy students added','','', ...effSubjects.map(s=>dummyStudents[s]>0?String(dummyStudents[s]):'')]);
+    // Row 3/4+: students
     ws.forEach(st=>{const sm=buildSubMap(st);rows.push([st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,...effSubjects.map(s=>scoreVal(sm[s],s))])});
   } else {
     const ranked=ws.map(st=>{
@@ -1016,7 +1027,10 @@ function exportCSV(which){
     rows.push(['Position','Student','Subjects','Subjects Found',sl,...effSubjects]);
     // Row 2: cohort sizes
     rows.push(['','Cohort size','','','',...effSubjects.map(s=>cohortVal(s))]);
-    // Row 3+: students
+    // Row 3: dummy students (if any applied)
+    const hasDummies=effSubjects.some(s=>dummyStudents[s]>0);
+    if(hasDummies)rows.push(['','Dummy students added','','','',...effSubjects.map(s=>dummyStudents[s]>0?String(dummyStudents[s]):'')]);
+    // Row 3/4+: students
     ranked.forEach((st,i)=>{const sm=st.sm;rows.push([i+1,st.name,effSubjects.filter(s=>sm[s]).join('; '),Object.keys(sm).length,st.avg!=null?st.avg.toFixed(3):'',...effSubjects.map(s=>scoreVal(sm[s],s))])});
   }
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
