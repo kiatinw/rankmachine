@@ -126,10 +126,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;o
 .collapsible-body{display:block}
 .collapsible-body.hidden{display:none}
 
-.table-wrap{overflow-x:auto;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px}
+.table-wrap{overflow:auto;max-height:78vh;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px}
 table{width:100%;border-collapse:collapse;font-size:.78rem}
 thead tr{background:#2e2b26;color:var(--paper)}
-thead th{padding:.55rem .9rem;text-align:left;font-weight:500;letter-spacing:.08em;text-transform:uppercase;font-size:.62rem;white-space:nowrap}
+thead th{padding:.55rem .9rem;text-align:left;font-weight:500;letter-spacing:.08em;text-transform:uppercase;font-size:.62rem;white-space:nowrap;position:sticky;top:0;z-index:4;background:#2e2b26;cursor:pointer;user-select:none}
 thead th.center{text-align:center}
 .col-subjects-list.hide{display:none}
 tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
@@ -174,6 +174,38 @@ details.debug{margin-top:2.5rem;border:1px solid var(--border);border-radius:4px
 details.debug summary{padding:.6rem 1rem;cursor:pointer;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--cream);user-select:none}
 details.debug pre{padding:1rem;font-size:.7rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;background:#fff}
 footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center}
+
+/* ── Sticky header + frozen name column ── */
+tbody tr{background:var(--paper)}
+td.name,th.name-col{position:sticky;left:0;z-index:2;background:inherit}
+th.name-col{background:#2e2b26;z-index:6}
+.has-pos td.pos-col,.has-pos th.pos-col{position:sticky;left:0;z-index:2;min-width:3.4rem;width:3.4rem;background:inherit}
+.has-pos th.pos-col{background:#2e2b26;z-index:6}
+.has-pos td.name,.has-pos th.name-col{left:3.4rem}
+.sort-ind{color:#f0d060}
+.sort-hint{font-size:.62rem;color:var(--muted);letter-spacing:.05em}
+
+/* ── Student search ── */
+.search-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.search-row input{font-family:'DM Mono',monospace;font-size:.8rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:.45rem .7rem;color:var(--ink);width:100%;max-width:320px}
+.search-row input:focus{outline:none;border-color:var(--accent)}
+#searchCount{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ── Data checks panel ── */
+.warn-panel.has-warnings{background:#fdf6e0;border-color:#c9a030}
+.warn-list{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.warn-list li{font-size:.72rem;line-height:1.7;padding:.5rem .7rem;background:var(--paper);border:1px solid var(--border);border-left:3px solid #c9a030;border-radius:0 3px 3px 0}
+.warn-tag{display:inline-block;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .4rem;border-radius:2px;background:#fdf2cc;border:1px solid #e8c840;margin-right:.5rem;color:#6a4a00}
+.warn-ok{font-size:.74rem;color:#2a7a3b;padding-top:.25rem}
+
+/* ── Z-score cap ── */
+.zcap-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.72rem}
+.zcap-row input[type=number]{font-family:'DM Mono',monospace;font-size:.75rem;width:5rem;background:var(--paper);border:1px solid var(--border);border-radius:2px;padding:.25rem .4rem;color:var(--ink);text-align:right}
+.zcap-row input[type=number]:focus{outline:none;border-color:var(--accent)}
+.zcap-row .hint{font-size:.65rem;color:var(--muted);line-height:1.5;flex-basis:100%}
+.pill.capped{border-style:dashed;border-color:var(--accent)}
+.method-row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.method-row .sort-hint{flex-basis:100%}
 </style>
 </head>
 <body>
@@ -252,6 +284,28 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
     <button class="btn secondary" onclick="resetTool()">↺ Load another PDF</button>
   </div>
 
+  <div class="method-row" id="methodRow" style="display:none">
+    <span class="penalty-mode-label">Rank students by:</span>
+    <div class="seg-control">
+      <button id="methodZ" class="active" onclick="setRankMethod('z')">Average z-score</button>
+      <button id="methodRank" onclick="setRankMethod('rank')">Average rank (from marks)</button>
+    </div>
+    <span class="sort-hint" id="methodHint"></span>
+  </div>
+
+  <div class="search-row">
+    <input type="search" id="studentSearch" placeholder="Search students…" oninput="applySearch()"/>
+    <span id="searchCount"></span>
+  </div>
+
+  <div class="panel warn-panel" id="warnPanel" style="display:none">
+    <div class="panel-header" onclick="togglePanel(this)">
+      <h3 id="warnTitle">Data checks</h3>
+      <span class="panel-arrow">▶</span>
+    </div>
+    <div class="panel-body" id="warnBody"></div>
+  </div>
+
   <div class="panel" id="penaltyPanel" style="display:none">
     <div class="panel-header" onclick="togglePanel(this)">
       <h3 id="penaltyPanelTitle">Adjustments</h3>
@@ -269,6 +323,7 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
     <div class="collapsible-body" id="body1">
       <div class="table-toolbar">
         <button class="toggle-subjects-btn" id="subjectsToggle1" onclick="toggleSubjectsList(1)">☰ Show subject list column</button>
+        <span class="sort-hint">Tip: double-click a column header to sort · again to reverse · a third time to reset</span>
       </div>
       <div class="table-wrap"><table id="rankTable"></table></div>
     </div>
@@ -283,8 +338,9 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
     <div class="collapsible-body" id="body2">
       <div class="table-toolbar">
         <button class="toggle-subjects-btn" id="subjectsToggle2" onclick="toggleSubjectsList(2)">☰ Show subject list column</button>
+        <span class="sort-hint">Tip: double-click a column header to sort · again to reverse · a third time to reset</span>
       </div>
-      <div class="table-wrap"><table id="leaderTable"></table></div>
+      <div class="table-wrap"><table id="leaderTable" class="has-pos"></table></div>
     </div>
   </div>
 
@@ -295,7 +351,7 @@ footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);font-
       <span class="collapse-toggle" id="toggle3">collapse ▲</span>
     </div>
     <div class="collapsible-body" id="body3">
-      <div class="table-wrap" style="border-top:2px solid var(--top30-border)"><table id="top30Table"></table></div>
+      <div class="table-wrap" style="border-top:2px solid var(--top30-border)"><table id="top30Table" class="has-pos"></table></div>
     </div>
   </div>
 
@@ -320,7 +376,11 @@ let mathsUnassigned=[];   // raw class codes not yet placed
 let dragCode=null;        // code string being dragged
 let dragFromZone=null;    // zone id string
 let groupIdSeq=0;
-let dummyStudents={};  // subjectName -> count of extra students added
+let dummyStudents={};
+let rankMethod='z';       // percentage data only: 'z' = average z-score, 'rank' = average rank derived from marks
+let zCap=3;               // z-scores are clamped to ±zCap (0 = no cap)
+const MIN_COHORT=15;      // courses smaller than this are flagged in the data checks
+const sortState={};       // tableId -> {col,dir}  // subjectName -> count of extra students added
 const subjectsVisible={1:false,2:false};
 const CAT={easy:0.8,normal:1.0,hard:1.2};
 
@@ -396,6 +456,9 @@ async function handleFile(file){
   ['subjectsToggle1','subjectsToggle2'].forEach(id=>{const b=document.getElementById(id);b.classList.remove('active');b.textContent='☰ Show subject list column'});
 
   document.getElementById('top30Section').style.display=isJunior()?'':'none';
+  document.getElementById('studentSearch').value='';
+  syncMethodUI();
+  buildWarnings();
   buildPenaltyPanel();
   renderTables();
   setProgress(null);
@@ -453,6 +516,12 @@ function parseText(text,year,rankKeys,scoreMode){
 
   const students=[];
   let cur=null,pendName=null,pendCode=null;
+  // Subjects detected (class code found) but no score matched any search key before the next subject/student
+  const missing=[];
+  const flushPending=()=>{
+    if(pendName&&cur)missing.push({student:cur.name,name:pendName,code:pendCode});
+    pendName=null;pendCode=null;
+  };
   const mathsCodesSet=new Set();
   // subjectRegistry: name -> {isGT, baseName}
   const subjectRegistry={};
@@ -461,7 +530,7 @@ function parseText(text,year,rankKeys,scoreMode){
     if(line.includes('--- PAGE BREAK ---'))continue;
 
     const sm=line.match(studentRe);
-    if(sm){cur={name:sm[1].trim(),subjects:[],mathsCode:null};students.push(cur);pendName=null;pendCode=null;continue}
+    if(sm){flushPending();cur={name:sm[1].trim(),subjects:[],mathsCode:null};students.push(cur);continue}
     if(!cur)continue;
 
     if(scoreMode==='percent'){
@@ -488,11 +557,13 @@ function parseText(text,year,rankKeys,scoreMode){
 
     const scm=line.match(subjectCodeRe);
     if(scm){
+      flushPending();
       pendName=scm[1].replace(/\s+-\s*(?:HSC|Preliminary)?\s*$/,'').trim();
       pendCode=scm[2]||null;
     }
   }
 
+  flushPending();   // last subject of the last student
   const subjectSet=new Set();
   students.forEach(s=>s.subjects.forEach(sub=>subjectSet.add(sub.name)));
   // Exclude raw maths subject names — they'll appear via groups
@@ -506,20 +577,88 @@ function parseText(text,year,rankKeys,scoreMode){
   }
   const allSubjects=[...subjectSet].filter(s=>!mathsBaseNames.has(s)).sort();
 
-  return{students,allSubjects,mathsCodes:mathsCodesSet,subjectRegistry,scoreMode};
+  return{students,allSubjects,mathsCodes:mathsCodesSet,subjectRegistry,scoreMode,missing,rankKeys};
 }
 
 // ── Z-scores ───────────────────────────────────────────────────────────────────
-function computeZScores(students,subjects){
+// Pool key decides which students a z-score is measured against:
+//  - all junior maths classes share ONE pool (so lower groups aren't inflated against their own group)
+//  - G&T and regular versions of a course share ONE pool (keyed by the base course name)
+function zPoolKey(s){
+  if(isJunior()&&parsedData&&parsedData.mathsCodes.size&&s.code&&/MMA/i.test(s.code))return'__maths__';
+  const reg=parsedData&&parsedData.subjectRegistry[s.name];
+  return reg?reg.baseName:s.name;
+}
+
+function computeZScores(students){
+  const pools={};
+  students.forEach(st=>st.subjects.forEach(s=>{
+    if(typeof s.score!=='number')return;
+    (pools[zPoolKey(s)]=pools[zPoolKey(s)]||[]).push(s.score);
+  }));
   const stats={};
-  subjects.forEach(subj=>{
-    const scores=students.map(st=>{const s=st.subjects.find(x=>x.name===subj);return s!=null?s.score:null}).filter(v=>v!==null);
-    if(!scores.length){stats[subj]={mean:0,sd:1};return}
+  Object.keys(pools).forEach(k=>{
+    const scores=pools[k];
     const mean=scores.reduce((a,b)=>a+b,0)/scores.length;
     const sd=Math.sqrt(scores.reduce((a,b)=>a+(b-mean)**2,0)/scores.length)||1;
-    stats[subj]={mean,sd};
+    stats[k]={mean,sd};
   });
-  return students.map(st=>({...st,subjects:st.subjects.map(s=>({...s,z:stats[s.name]?(s.score-stats[s.name].mean)/stats[s.name].sd:0}))}));
+  return students.map(st=>({...st,subjects:st.subjects.map(s=>{
+    const t=stats[zPoolKey(s)];
+    const zRaw=t?(s.score-t.mean)/t.sd:0;
+    const z=zCap>0?Math.max(-zCap,Math.min(zCap,zRaw)):zRaw;
+    return{...s,z,zRaw};
+  })}));
+}
+
+// Turn each mark into a rank within its course (same pooling as the z-scores:
+// G&T joins the regular course, all junior maths classes are one course).
+// Ties share the best rank (1, 2, 2, 4) and "total" is the number of students in the pool.
+function deriveRanks(students){
+  const pools={};
+  students.forEach(st=>st.subjects.forEach(s=>{
+    if(typeof s.score!=='number')return;
+    (pools[zPoolKey(s)]=pools[zPoolKey(s)]||[]).push(s.score);
+  }));
+  Object.keys(pools).forEach(k=>pools[k].sort((a,b)=>b-a));   // highest mark first
+  return students.map(st=>({...st,subjects:st.subjects.map(s=>{
+    const arr=pools[zPoolKey(s)];
+    let lo=0,hi=arr.length;                                   // first index whose mark <= s.score
+    while(lo<hi){const mid=(lo+hi)>>1;if(arr[mid]>s.score)lo=mid+1;else hi=mid}
+    return{...s,rank:lo+1,total:arr.length};
+  })}));
+}
+
+// Percentage data can be ranked two ways; everything else behaves as before.
+function usesZ(){return !!parsedData&&parsedData.scoreMode==='percent'&&rankMethod==='z'}
+function workingData(students){
+  if(!parsedData||parsedData.scoreMode!=='percent')return students;
+  return rankMethod==='z'?computeZScores(students):deriveRanks(students);
+}
+function syncMethodUI(){
+  const pct=!!parsedData&&parsedData.scoreMode==='percent';
+  document.getElementById('methodRow').style.display=pct?'':'none';
+  document.getElementById('methodZ').classList.toggle('active',rankMethod==='z');
+  document.getElementById('methodRank').classList.toggle('active',rankMethod==='rank');
+  document.getElementById('methodHint').textContent=rankMethod==='z'
+    ?'Compares each mark with the course average and spread. Difficulty weights and the z-score cap apply.'
+    :'Ranks each mark within its course (G&T joins the regular course; all junior maths classes are ranked together), then averages the ranks. Dummy students apply; difficulty weights do not.';
+}
+function setRankMethod(m){
+  rankMethod=m;syncMethodUI();
+  if(parsedData){buildPenaltyPanel();renderTables()}
+}
+
+// Weighted average z for one student. Weights are looked up by the displayed
+// column name (e.g. "Maths: Group 1"), so maths group weights are applied.
+function weightedAvgZ(sm,effSubjects){
+  let ws=0,wt=0,zs=0,n=0;
+  effSubjects.forEach(subj=>{
+    const s=sm[subj];if(!s||typeof s.z!=='number')return;
+    const w=subjectWeights[subj]??1.0;
+    ws+=s.z*w;wt+=w;zs+=s.z;n++;
+  });
+  return{avg:wt>0?ws/wt:null,rawZ:n?zs/n:null};
 }
 
 // ── Maths group resolution ─────────────────────────────────────────────────────
@@ -563,16 +702,14 @@ function computeAvg(st,effSubjects,isPercent){
   const entries=effSubjects.map(subj=>sm[subj]).filter(Boolean);
   if(!entries.length)return null;
   if(isPercent){
-    let ws=0,wt=0;
-    entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws+=s.z*w;wt+=w});
-    return wt>0?ws/wt:null;
+    return weightedAvgZ(sm,effSubjects).avg;
   }
   return entries.reduce((a,s)=>a+s.rank,0)/entries.length;
 }
 
 // ── Build penalty panel ────────────────────────────────────────────────────────
 function buildPenaltyPanel(){
-  const isPercent=parsedData.scoreMode==='percent';
+  const isPercent=usesZ();
   const show=isPercent||(parsedData.allSubjects.length>0)||isJunior()&&parsedData.mathsCodes.size;
   document.getElementById('penaltyPanel').style.display=show?'':'none';
   if(!show)return;
@@ -621,6 +758,12 @@ function buildPenaltyPanel(){
       gt.forEach(s=>{html+=penaltyRowHTML(s,true)});
       html+='</div>';
     }
+    html+=`<div class="penalty-section-label">Extreme z-scores</div>
+    <div class="zcap-row">
+      <label for="zCapInput">Cap z-scores at ±</label>
+      <input type="number" id="zCapInput" min="0" max="10" step="0.5" value="${zCap}" onchange="onZCapChange(this)"/>
+      <span class="hint">0 = no cap. Stops one outlier mark in a small or tightly-clustered course from dominating a student's average. Capped results show a dashed outline in the tables. Click "Apply weights &amp; re-rank" to apply.</span>
+    </div>`;
     html+=`<button class="penalty-apply-btn" onclick="applyWeights()">Apply weights &amp; re-rank</button>`;
   }
 
@@ -640,12 +783,13 @@ function buildPenaltyPanel(){
 
   // ── Dummy students section (rank mode only) ──
   if(!isPercent){
+    seedDummyRows();
     html+=`<div class="penalty-section-label" style="margin-top:0">Dummy students — adjust cohort size</div>
     <p style="font-size:.72rem;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">
       Add phantom students to a course to make its cohort size comparable to larger courses.
       A rank of <strong>1</strong> in a course with 50 dummies added becomes <strong>1&nbsp;→&nbsp;51</strong> and is treated as 51st in a 60-student cohort when computing averages.
     </p>
-    <div id="dummyRowsContainer"></div>
+    ${dummySeedNote()}<div id="dummyRowsContainer"></div>
     <button class="add-group-btn" style="margin-top:.5rem" onclick="addDummyRow()">+ Add course</button>
     <button class="penalty-apply-btn" style="margin-top:.75rem;display:block" onclick="applyDummies()">Apply dummies &amp; re-rank</button>`;
   }
@@ -687,6 +831,7 @@ function wStyle(w){return w<1?'border-color:#a8d0a8;background:#e8f4e8':w>1?'bor
 function onCatChange(sel,subj){subjectWeights[subj]=CAT[sel.value];sel.closest('.penalty-row').style.cssText=wStyle(CAT[sel.value])}
 function onMultChange(inp,subj){subjectWeights[subj]=parseFloat(inp.value)||1.0}
 function setPenaltyMode(m){penaltyMode=m;if(parsedData)buildPenaltyPanel()}
+function onZCapChange(inp){zCap=Math.max(0,parseFloat(inp.value)||0)}
 function applyWeights(){if(parsedData)renderTables()}
 
 function showApplyAllGT(){
@@ -806,17 +951,41 @@ function renameGroup(id,name){
 // ── Dummy students ────────────────────────────────────────────────────────────────
 // dummyRows: [{subject, count}] — transient UI state, synced to dummyStudents on apply
 let dummyRows=[];
+let dummySeeded=false;   // true once the suggested small courses have been pre-filled for this parse
+
+// Table columns whose cohort is below MIN_COHORT (same definition as the "Small course" data check)
+function suggestedSmallColumns(){
+  const pct=parsedData.scoreMode==='percent';
+  const keyOf=s=>pct?zPoolKey(s):s.name;
+  const poolN={};
+  parsedData.students.forEach(st=>st.subjects.forEach(s=>{const k=keyOf(s);poolN[k]=(poolN[k]||0)+1}));
+  const colKey={};
+  parsedData.students.forEach(st=>{const sm=buildSubMap(st);Object.keys(sm).forEach(col=>{colKey[col]=keyOf(sm[col])})});
+  return getEffectiveSubjects().filter(col=>colKey[col]!==undefined&&poolN[colKey[col]]<MIN_COHORT);
+}
+// Pre-fill a row with 0 dummy students for each small course (once per parse, so removed rows stay removed)
+function seedDummyRows(){
+  if(dummySeeded||!parsedData)return;
+  dummySeeded=true;
+  suggestedSmallColumns().forEach(col=>{
+    if(!dummyRows.some(r=>r.subject===col))dummyRows.push({subject:col,count:0,seeded:true});
+  });
+}
+function dummySeedNote(){
+  if(!dummyRows.some(r=>r.seeded))return'';
+  return`<p style="font-size:.72rem;color:#6a4a00;background:#fdf6e0;border-left:3px solid #c9a030;padding:.5rem .75rem;margin-bottom:.75rem;line-height:1.6;">Courses with fewer than ${MIN_COHORT} students have been added below with <strong>0</strong> dummy students. Enter a number for each (or remove the row), then click <strong>Apply dummies &amp; re-rank</strong>.</p>`;
+}
 
 function renderDummyRows(){
   const container=document.getElementById('dummyRowsContainer');
   if(!container)return;
-  const subjects=parsedData?parsedData.allSubjects:[];
+  const subjects=parsedData?getEffectiveSubjects():[];   // the actual table columns, incl. maths groups
   let html='';
   dummyRows.forEach((row,i)=>{
     html+=`<div class="dummy-row">
       <select onchange="dummyRows[${i}].subject=this.value">
         <option value="">— select subject —</option>
-        ${subjects.map(s=>`<option value="${s.replace(/"/g,'&quot;')}"${row.subject===s?' selected':''}>${s}</option>`).join('')}
+        ${subjects.map(s=>`<option value="${s.replace(/"/g,'&quot;')}"${row.subject===s?' selected':''}>${eH(s)}</option>`).join('')}
       </select>
       <span class="dummy-label">+ </span>
       <input type="number" min="0" max="9999" step="1" value="${row.count}"
@@ -854,12 +1023,172 @@ function adjustedRank(s,subjName){
   return{rank:s.rank+extra,total:s.total+extra,adjusted:true,origRank:s.rank,origTotal:s.total};
 }
 
+// ── Data checks (shown after parsing) ─────────────────────────────────────────
+function buildWarnings(){
+  const panel=document.getElementById('warnPanel');
+  const title=document.getElementById('warnTitle'),body=document.getElementById('warnBody');
+  const hdr=panel.querySelector('.panel-header');
+  const {students,scoreMode}=parsedData;
+  const isPercent=scoreMode==='percent';
+  const valOf=s=>isPercent?s.score:s.rank;
+  const items=[];
+
+  // 0) Subjects detected from a class code, but no result matched the search keys
+  const missGroups={};
+  (parsedData.missing||[]).forEach(m=>{
+    const g=missGroups[m.name]=missGroups[m.name]||{codes:new Set(),students:[]};
+    if(m.code)g.codes.add(m.code);
+    g.students.push(m.student);
+  });
+  // how many students DID get a result for each detected subject (to tell "none" from "some")
+  const gotResult={};
+  students.forEach(st=>st.subjects.forEach(s=>{
+    const reg=parsedData.subjectRegistry[s.name];
+    const base=reg?reg.baseName:s.name;
+    gotResult[base]=(gotResult[base]||0)+1;
+  }));
+  const keyList=(parsedData.rankKeys||[]).map(k=>`"${eH(k)}"`).join(', ');
+  Object.keys(missGroups).sort().forEach(name=>{
+    const g=missGroups[name],nMiss=g.students.length,nGot=gotResult[name]||0;
+    const codes=[...g.codes].sort().join(', ');
+    const who=g.students.slice(0,10).map(eH).join('; ')+(nMiss>10?` and ${nMiss-10} more`:'');
+    const scope=nGot===0
+      ?`No result was found for any of the ${nMiss} student${nMiss===1?'':'s'} who have it, so this subject is <strong>missing from the tables entirely</strong>.`
+      :`${nMiss} student${nMiss===1?' is':'s are'} missing a result (${nGot} other${nGot===1?' has':'s have'} one).`;
+    items.push({tag:'No result found',html:`<strong>${eH(name)}</strong>${codes?` (${eH(codes)})`:''} — detected as a subject, but nothing matched your search keys ${keyList}. ${scope} If this subject labels its result differently, add that label as another search key and click Re-parse. Affected: ${who}.`});
+  });
+
+  // 1) Subjects where (almost) everyone has the same value — usually a median/average captured by mistake
+  const byName={};
+  students.forEach(st=>st.subjects.forEach(s=>{(byName[s.name]=byName[s.name]||[]).push(valOf(s))}));
+  Object.keys(byName).sort().forEach(name=>{
+    const vals=byName[name],n=vals.length;
+    if(n<5)return;
+    const counts={};vals.forEach(v=>{counts[v]=(counts[v]||0)+1});
+    let topV=null,topC=0;
+    Object.keys(counts).forEach(k=>{if(counts[k]>topC){topC=counts[k];topV=k}});
+    if(topC/n>=0.9){
+      const what=isPercent?`mark (${topV}%)`:`rank (${topV})`;
+      const who=topC===n?`All ${n} students have`:`${topC} of ${n} students have`;
+      items.push({tag:'Identical values',html:`<strong>${eH(name)}</strong> — ${who} the same ${what}. This usually means a class median or average was captured instead of each student's own result. Check the Debug panel and your search keys.`});
+    }
+  });
+
+  // 2) Small courses. Percentage mode pools G&T with regular and all maths classes, so count the pool.
+  const byPool={};
+  students.forEach(st=>st.subjects.forEach(s=>{
+    const k=isPercent?zPoolKey(s):s.name;
+    byPool[k]=(byPool[k]||0)+1;
+  }));
+  Object.keys(byPool).sort().forEach(k=>{
+    const n=byPool[k];
+    if(n>=MIN_COHORT)return;
+    const label=k==='__maths__'?'Mathematics (all junior maths classes)':k;
+    const advice=isPercent
+      ?'z-scores are unreliable in very small courses, so one high mark can distort a student\'s average (the z-score cap limits this). If you rank by average rank instead, consider adding dummy students (it will be listed in the Course Adjustments panel with 0).'
+      :'its ranks are out of a small cohort, so consider adding dummy students to compare it fairly with larger courses. It has been listed in the Course Adjustments panel with 0 — just enter a number.';
+    items.push({tag:'Small course',html:`<strong>${eH(label)}</strong> — only ${n} student${n===1?'':'s'} in this course; ${advice}`});
+  });
+
+  // 3) Students with fewer subjects than the most common count (flagged, not excluded)
+  const freq={};
+  students.forEach(st=>{const c=st.subjects.length;freq[c]=(freq[c]||0)+1});
+  const typical=Number(Object.keys(freq).sort((a,b)=>freq[b]-freq[a]||b-a)[0]);
+  const low=students.filter(st=>st.subjects.length<typical);
+  if(low.length){
+    const shown=low.slice(0,12).map(st=>`${eH(st.name)} (${st.subjects.length})`).join('; ');
+    const more=low.length>12?` and ${low.length-12} more`:'';
+    items.push({tag:'Fewer subjects',html:`${low.length} student${low.length===1?'':'s'} ${low.length===1?'has':'have'} fewer than the typical ${typical} subjects, so their average rests on fewer results: ${shown}${more}.`});
+  }
+
+  panel.style.display='';
+  if(!items.length){
+    title.textContent='✓ Data checks — no issues found';
+    panel.classList.remove('has-warnings');
+    body.innerHTML='<p class="warn-ok">No identical-mark, small-course or missing-subject issues were detected.</p>';
+    body.classList.remove('open');hdr.classList.remove('open');
+    return;
+  }
+  title.textContent=`⚠ Data checks — ${items.length} thing${items.length===1?'':'s'} to review`;
+  panel.classList.add('has-warnings');
+  body.innerHTML='<ul class="warn-list">'+items.map(i=>`<li><span class="warn-tag">${i.tag}</span>${i.html}</li>`).join('')+'</ul>';
+  body.classList.add('open');hdr.classList.add('open');
+}
+
+// ── Student search (filters all three tables) ─────────────────────────────────
+function applySearch(){
+  const input=document.getElementById('studentSearch');
+  if(!input)return;
+  const tokens=input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  let shown=0,total=0;
+  ['rankTable','leaderTable','top30Table'].forEach(id=>{
+    const t=document.getElementById(id);if(!t)return;
+    t.querySelectorAll('tbody tr').forEach(tr=>{
+      const nm=((tr.querySelector('td.name')||{}).textContent||'').toLowerCase();
+      const hit=tokens.every(tok=>nm.includes(tok));
+      tr.style.display=hit?'':'none';
+      if(id==='leaderTable'){total++;if(hit)shown++}
+    });
+  });
+  document.getElementById('searchCount').textContent=tokens.length?`${shown} of ${total} students`:'';
+}
+
+// ── Double-click a column header to sort ──────────────────────────────────────
+// Cycle per column: ascending → descending → original order. Blank cells always sort last.
+function cellSortVal(td){
+  if(!td)return null;
+  let v=td.getAttribute('data-sort');
+  if(v===null)v=td.textContent.trim();
+  if(v===''||v==='—')return null;
+  const n=Number(v);
+  return isNaN(n)?v.toLowerCase():n;
+}
+function sortTable(id,col){
+  const t=document.getElementById(id);
+  const body=t.tBodies[0];if(!body)return;
+  const rows=[...body.rows];
+  rows.forEach((r,i)=>{if(r.dataset.orig===undefined)r.dataset.orig=i});
+  const st=sortState[id]&&sortState[id].col===col?sortState[id]:{col,dir:0};
+  st.dir=st.dir===0?1:st.dir===1?-1:0;
+  sortState[id]=st;
+  rows.sort((a,b)=>{
+    const orig=a.dataset.orig-b.dataset.orig;
+    if(st.dir===0)return orig;
+    const va=cellSortVal(a.cells[col]),vb=cellSortVal(b.cells[col]);
+    if(va===null&&vb===null)return orig;
+    if(va===null)return 1;
+    if(vb===null)return-1;
+    const c=(typeof va==='number'&&typeof vb==='number')?va-vb:String(va).localeCompare(String(vb));
+    return c===0?orig:c*st.dir;
+  });
+  rows.forEach(r=>body.appendChild(r));
+  [...t.tHead.rows[0].cells].forEach((th,i)=>{
+    const old=th.querySelector('.sort-ind');if(old)old.remove();
+    if(st.dir!==0&&i===col){
+      const s=document.createElement('span');s.className='sort-ind';s.textContent=st.dir===1?' ▲':' ▼';th.appendChild(s);
+    }
+  });
+  if(st.dir===0)delete sortState[id];
+}
+function initSorting(){
+  ['rankTable','leaderTable','top30Table'].forEach(id=>{
+    const t=document.getElementById(id);
+    t.addEventListener('dblclick',e=>{
+      const th=e.target.closest('th');
+      if(!th||!t.tHead||!t.tHead.contains(th))return;
+      if(window.getSelection)window.getSelection().removeAllRanges();
+      sortTable(id,th.cellIndex);
+    });
+  });
+}
+
 // ── Render tables ──────────────────────────────────────────────────────────────
 function renderTables(){
   if(!parsedData)return;
+  Object.keys(sortState).forEach(k=>delete sortState[k]);
   const {students,allSubjects,scoreMode}=parsedData;
-  const isPercent=scoreMode==='percent';
-  let ws=isPercent?computeZScores(students,allSubjects):students;
+  const isPercent=usesZ();
+  let ws=workingData(students);
   const effSubjects=getEffectiveSubjects();
   const isGT=n=>(parsedData.subjectRegistry[n]||{}).isGT;
 
@@ -868,15 +1197,24 @@ function renderTables(){
     const gt=isGT(subjName);
     if(isPercent){
       const cls=s.score>=80?'top':s.score<50?'bottom':'';
-      return`<span class="pill ${cls}${gt?' gt-pill':''}">${s.score.toFixed(1)}%</span>`;
+      const capped=typeof s.zRaw==='number'&&s.zRaw!==s.z;
+      const tip=typeof s.z==='number'?` title="z = ${s.z.toFixed(2)}${capped?` (capped from ${s.zRaw.toFixed(2)})`:''}"`:'';
+      return`<span class="pill ${cls}${gt?' gt-pill':''}${capped?' capped':''}"${tip}>${s.score.toFixed(1)}%</span>`;
     } else {
       const adj=adjustedRank(s,subjName);
       const r=adj.rank/adj.total;const cls=r<=0.25?'top':r>=0.75?'bottom':'';
       const label=adj.adjusted
         ?`${adj.origRank}&nbsp;→&nbsp;${adj.rank}/${adj.total}`
         :`${s.rank}/${s.total}`;
-      return`<span class="pill ${cls}${gt?' gt-pill':''}">${label}</span>`;
+      const mTip=typeof s.score==='number'?` title="${s.score.toFixed(1)}% · rank ${s.rank} of ${s.total}"`:'';
+      return`<span class="pill ${cls}${gt?' gt-pill':''}"${mTip}>${label}</span>`;
     }
+  }
+
+  // Value used when sorting a score column (blank = missing, always sorted last)
+  function sortVal(s,subjName){
+    if(!s)return'';
+    return isPercent?s.score:adjustedRank(s,subjName).rank;
   }
 
   function thFor(s){
@@ -888,14 +1226,14 @@ function renderTables(){
 
   // ── Table 1 ──
   document.getElementById('rankCount').textContent=`${students.length} students · ${effSubjects.length} subjects`;
-  let h=`<thead><tr><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects</th>`;
+  let h=`<thead><tr><th class="name-col">Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects</th>`;
   effSubjects.forEach(s=>{h+=thFor(s)});
   h+='</tr></thead><tbody>';
   ws.forEach(st=>{
     const sm=buildSubMap(st);
     const subList=effSubjects.filter(s=>sm[s]).join(', ');
     h+=`<tr><td class="name">${eH(st.name)}</td><td class="subjects-list-cell col-subjects-list hide">${eH(subList)||'—'}</td><td class="center">${Object.keys(sm).length}</td>`;
-    effSubjects.forEach(s=>{h+=`<td class="center">${pillFor(sm[s],s)}</td>`});
+    effSubjects.forEach(s=>{h+=`<td class="center" data-sort="${sortVal(sm[s],s)}">${pillFor(sm[s],s)}</td>`});
     h+='</tr>';
   });
   h+='</tbody>';
@@ -910,9 +1248,7 @@ function renderTables(){
     let avg=null,rawZ=null;
     if(entries.length){
       if(isPercent){
-        let ws2=0,wt=0;entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws2+=s.z*w;wt+=w});
-        avg=wt>0?ws2/wt:null;
-        rawZ=entries.reduce((a,s)=>a+s.z,0)/entries.length;
+        const r=weightedAvgZ(sm,effSubjects);avg=r.avg;rawZ=r.rawZ;
       } else {
         // Use adjusted rank (with dummy students) for leaderboard sorting
         avg=entries.reduce((a,s)=>{
@@ -925,7 +1261,9 @@ function renderTables(){
   }).sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return-1;return isPercent?b.avg-a.avg:a.avg-b.avg});
 
   const scoreLabel=isPercent?(anyW?'Wtd Avg Z':'Avg Z-Score'):'Avg Rank';
-  document.getElementById('boardCount').textContent=isPercent?(anyW?'Weighted avg z-score':'Avg z-score'):'Lowest average rank';
+  let cappedN=0;
+  if(isPercent)ws.forEach(st=>st.subjects.forEach(s=>{if(typeof s.zRaw==='number'&&s.zRaw!==s.z)cappedN++}));
+  document.getElementById('boardCount').textContent=(isPercent?(anyW?'Weighted avg z-score':'Avg z-score'):(parsedData.scoreMode==='percent'?'Lowest average rank (from marks)':'Lowest average rank'))+(cappedN?` · ${cappedN} z-score${cappedN===1?'':'s'} capped at ±${zCap}`:'');
 
   function leaderRows(list,showTop30Class){
     return list.map((st,idx)=>{
@@ -939,16 +1277,16 @@ function renderTables(){
         const d=st.avg.toFixed(3);
         avgCell=anyW&&st.rawZ!==null?`<span class="has-tip" data-tip="Unweighted avg z: ${st.rawZ.toFixed(3)}">${d}</span>`:d;
       } else {avgCell=st.avg.toFixed(2)}
-      let r=`<tr class="${rowCls}"><td class="center"><span class="position-badge ${pBadge}">${medal||pos}</span></td><td class="name">${eH(st.name)}</td>`;
+      let r=`<tr class="${rowCls}"><td class="center pos-col" data-sort="${pos}"><span class="position-badge ${pBadge}">${medal||pos}</span></td><td class="name">${eH(st.name)}</td>`;
       if(showTop30Class!==false)r+=`<td class="subjects-list-cell col-subjects-list hide">${eH(effSubjects.filter(s=>st.sm[s]).join(', '))||'—'}</td>`;
-      r+=`<td class="center">${Object.keys(st.sm).length}</td><td class="center" style="font-weight:500">${avgCell}</td>`;
-      effSubjects.forEach(s=>{r+=`<td class="center">${pillFor(st.sm[s],s)}</td>`});
+      r+=`<td class="center">${Object.keys(st.sm).length}</td><td class="center" style="font-weight:500" data-sort="${st.avg===null?'':st.avg}">${avgCell}</td>`;
+      effSubjects.forEach(s=>{r+=`<td class="center" data-sort="${sortVal(st.sm[s],s)}">${pillFor(st.sm[s],s)}</td>`});
       r+='</tr>';return r;
     }).join('');
   }
 
   // ── Table 2 ──
-  let h2=`<thead><tr><th class="center">Pos</th><th>Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects</th><th class="center">${scoreLabel}</th>`;
+  let h2=`<thead><tr><th class="center pos-col">Pos</th><th class="name-col">Student</th><th class="center col-subjects-list hide">Subjects</th><th class="center">Subjects</th><th class="center">${scoreLabel}</th>`;
   effSubjects.forEach(s=>{h2+=thFor(s)});
   h2+=`</tr></thead><tbody>${leaderRows(ranked,isJunior())}</tbody>`;
   document.getElementById('leaderTable').innerHTML=h2;
@@ -958,29 +1296,30 @@ function renderTables(){
   if(isJunior()){
     const top30=ranked.slice(0,30);
     document.getElementById('top30Count').textContent=top30.length+' students';
-    let h3=`<thead><tr><th class="center">Pos</th><th>Student</th><th class="center">Subjects</th><th class="center">${scoreLabel}</th>`;
+    let h3=`<thead><tr><th class="center pos-col">Pos</th><th class="name-col">Student</th><th class="center">Subjects</th><th class="center">${scoreLabel}</th>`;
     effSubjects.forEach(s=>{h3+=thFor(s)});
     h3+='</tr></thead><tbody>';
     top30.forEach((st,idx)=>{
       const pos=idx+1;const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
       const pBadge=pos===1?'p1':pos===2?'p2':pos===3?'p3':'ptop30';
       let avgCell=st.avg===null?'—':isPercent?(anyW&&st.rawZ!==null?`<span class="has-tip" data-tip="Unweighted: ${st.rawZ.toFixed(3)}">${st.avg.toFixed(3)}</span>`:st.avg.toFixed(3)):st.avg.toFixed(2);
-      h3+=`<tr class="top30"><td class="center"><span class="position-badge ${pBadge}">${medal||pos}</span></td><td class="name">${eH(st.name)}</td><td class="center">${Object.keys(st.sm).length}</td><td class="center" style="font-weight:500">${avgCell}</td>`;
-      effSubjects.forEach(s=>{h3+=`<td class="center">${pillFor(st.sm[s],s)}</td>`});
+      h3+=`<tr class="top30"><td class="center pos-col" data-sort="${pos}"><span class="position-badge ${pBadge}">${medal||pos}</span></td><td class="name">${eH(st.name)}</td><td class="center">${Object.keys(st.sm).length}</td><td class="center" style="font-weight:500" data-sort="${st.avg===null?'':st.avg}">${avgCell}</td>`;
+      effSubjects.forEach(s=>{h3+=`<td class="center" data-sort="${sortVal(st.sm[s],s)}">${pillFor(st.sm[s],s)}</td>`});
       h3+='</tr>';
     });
     h3+='</tbody>';
     document.getElementById('top30Table').innerHTML=h3;
   }
+  applySearch();
 }
 
 // ── CSV Export ─────────────────────────────────────────────────────────────────
 function exportCSV(which){
   if(!parsedData)return;
   const {students,allSubjects,scoreMode}=parsedData;
-  const isPercent=scoreMode==='percent';
+  const isPercent=usesZ();
   const year=document.getElementById('yearSelect').value;
-  let ws=isPercent?computeZScores(students,allSubjects):students;
+  let ws=workingData(students);
   const effSubjects=getEffectiveSubjects();
 
   // Rank mode: output adjusted rank (with dummies) — raw integer to avoid Excel date parsing
@@ -1020,7 +1359,7 @@ function exportCSV(which){
     const ranked=ws.map(st=>{
       const sm=buildSubMap(st);const entries=effSubjects.map(s=>sm[s]).filter(Boolean);
       let avg=null;
-      if(entries.length){if(isPercent){let ws2=0,wt=0;entries.forEach(s=>{const w=subjectWeights[s.name]??1.0;ws2+=s.z*w;wt+=w});avg=wt>0?ws2/wt:null}else avg=entries.reduce((a,s)=>{const subj=effSubjects.find(n=>sm[n]===s);return a+adjustedRank(s,subj||s.name).rank;},0)/entries.length}
+      if(entries.length){if(isPercent){avg=weightedAvgZ(sm,effSubjects).avg}else avg=entries.reduce((a,s)=>{const subj=effSubjects.find(n=>sm[n]===s);return a+adjustedRank(s,subj||s.name).rank;},0)/entries.length}
       return{...st,avg,sm};
     }).sort((a,b)=>{if(a.avg===null)return 1;if(b.avg===null)return-1;return isPercent?b.avg-a.avg:a.avg-b.avg});
     // Row 1: headers
@@ -1035,32 +1374,33 @@ function exportCSV(which){
   }
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=`rankforge-year${year}-${which}.csv`;a.click();URL.revokeObjectURL(url);
+  const a=document.createElement('a');a.href=url;a.download=`rankforge-year${year}${(parsedData.scoreMode==='percent'&&rankMethod==='rank')?'-avgrank':''}-${which}.csv`;a.click();URL.revokeObjectURL(url);
 }
 
 // ── Reset ──────────────────────────────────────────────────────────────────────
 function reparseFile(){
   if(!lastUploadedFile){setStatus('No file loaded — please upload a PDF first.','error');return;}
   // Reset results but keep settings, then re-run
-  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dummyStudents={};dummyRows=[];
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dummyStudents={};dummyRows=[];dummySeeded=false;
   document.getElementById('results').classList.remove('visible');
-  document.getElementById('penaltyPanel').style.display='none';
+  document.getElementById('penaltyPanel').style.display='none';document.getElementById('warnPanel').style.display='none';
   document.getElementById('top30Section').style.display='none';
   handleFile(lastUploadedFile);
 }
 
 function resetTool(){
-  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dummyStudents={};dummyRows=[];dragCode=null;lastUploadedFile=null;
+  parsedData=null;subjectWeights={};mathsGroups=[];mathsUnassigned=[];dummyStudents={};dummyRows=[];dummySeeded=false;dragCode=null;lastUploadedFile=null;
   document.getElementById('results').classList.remove('visible');
   document.getElementById('uploadZone').style.display='';
   document.getElementById('fileInput').value='';
-  document.getElementById('penaltyPanel').style.display='none';
+  document.getElementById('penaltyPanel').style.display='none';document.getElementById('warnPanel').style.display='none';
   document.getElementById('top30Section').style.display='none';
   setStatus('');setProgress(null);
   ['body1','body2','body3'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
   ['header1','header2','header3'].forEach(id=>document.getElementById(id).classList.remove('collapsed'));
   ['toggle1','toggle2','toggle3'].forEach(id=>{document.getElementById(id).textContent='collapse ▲'});
 }
+initSorting();
 </script>
 </body>
 </html>
